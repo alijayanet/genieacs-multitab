@@ -16,7 +16,7 @@ chmod +x install-genieacs.sh
 ```
 
 
-user admin pass admin <br>
+user admin<br> pass admin <br>
 terima kasih https://www.gangtikus.net/ 
 
 Spesial Thanks ❤️ Zaidka & AnperMyId
