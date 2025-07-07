@@ -14,7 +14,7 @@ cd genieacs-multitab
 ```
 chmod +x install-genieacs.sh
 ```
-```
+
 
 user admin pass admin <br>
 terima kasih https://www.gangtikus.net/ 
