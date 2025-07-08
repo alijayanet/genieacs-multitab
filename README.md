@@ -1,15 +1,3 @@
-==============================================================================
-   _____                _______ _ _              _   _      _
-  / ____|              |__   __(_) |            | \ | |    | |
- | |  __  __ _ _ __   __ _| |   _| | ___   _ ___|  \| | ___| |_
- | | |_ |/ _` | '_ \ / _` | |  | | |/ / | | / __| . ` |/ _ \ __|
- | |__| | (_| | | | | (_| | |  | |   <| |_| \__ \ |\  |  __/ |_
-  \_____|\__,_|_| |_|\__, |_|  |_|_|\_\__,_|___/_| \_|\___|\__|
-                      __/ |
-                     |___/
-
-Installer Otomatis GenieACS v1.2.13 Modded by GangTikusNet
-==============================================================================
 
 DESKRIPSI SINGKAT
 -----------------
@@ -47,56 +35,35 @@ KEBUTUHAN SISTEM (SYSTEM REQUIREMENTS)
     Jika Anda belum login sebagai root, ada dua cara untuk menjalankan skrip:
 
     ---------------------------------------------------------------------
-    OPSI 1: MENGAKTIFKAN LOGIN ROOT LANGSUNG (TIDAK DIREKOMENDASIKAN)
-    ---------------------------------------------------------------------
-    Gunakan cara ini hanya jika Anda mengerti risikonya.
+    # INSTALL GENIEACS OTOMATIS
+This is autoinstall GenieACS 
 
-    1. Login ke server Anda dengan user biasa.
-    2. Edit file konfigurasi SSH:
-       nano /etc/ssh/sshd_config
+# Usage
+```
+apt install git curl -y
+```
+```
+git clone https://github.com/alijayanet/genieacs-multitab
+```
+```
+cd genieacs
+```
+```
+chmod +x Installer-GenieACS.sh
+```
+```
+bash Installer-GenieACS.sh
+```
 
-    3. Cari baris `#PermitRootLogin prohibit-password` atau sejenisnya,
-       hapus tanda pagar `#` di depannya, dan ubah menjadi `yes`:
-       PermitRootLogin yes
+Baca terlebih dahulu !!!
 
-    4. Simpan file (Ctrl+O, Enter) dan keluar (Ctrl+X).
-    5. Atur password untuk user root (jika belum pernah):
-       passwd root
-       (Masukkan password baru dua kali)
+https://wa.me/6281947215703
 
-    6. Restart servis SSH untuk menerapkan perubahan:
-       systemctl restart sshd
+atau link group telegram
 
-    7. Tutup terminal Anda, lalu buka lagi dan login sebagai user `root`
-       dengan password yang baru Anda buat.
+https://t.me/alijayaNetAcs
 
-    ---------------------------------------------------------------------
-    OPSI 2: MENGGUNAKAN `sudo` (DIREKOMENDASIKAN & LEBIH AMAN)
-    ---------------------------------------------------------------------
-    Ini adalah cara standar dan paling aman.
-
-    1. Login ke server dengan user biasa Anda.
-    2. Jalankan skrip dengan menambahkan `sudo` di depannya:
-       ```
-       sudo ./Installer-GenieACS.sh
-       ```
-    3. Anda akan diminta memasukkan password untuk user *Anda saat ini*,
-       bukan password root.
-
-
-CARA PENGGUNAAN
-----------------
-1.  Beri Izin Eksekusi pada Skrip (hanya perlu dilakukan sekali):
-    Buka terminal Anda, lalu jalankan perintah:
-    
-    chmod +x Installer-GenieACS.sh
-
-2.  Jalankan Skrip Utama (lihat bagian Hak Akses di atas):
-    ```
-    ./Installer-GenieACS.sh
-    ```
-Setelah itu, sebuah menu dengan berbagai pilihan akan muncul. Cukup ikuti
-petunjuk dan pilih opsi yang sesuai dengan kebutuhan Anda.
+SILAHKAN YANG INGIN BERBAGI UANG KOPI
 
 
 user admin<br> pass admin <br>
