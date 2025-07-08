@@ -1,4 +1,5 @@
-
+Installer Otomatis GenieACS v1.2.13 Modded by GangTikusNet
+==============================================================================
 DESKRIPSI SINGKAT
 -----------------
 Skrip ini dirancang untuk menginstal dan mengelola server GenieACS Anda
