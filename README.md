@@ -64,9 +64,6 @@ atau link group telegram
 
 https://t.me/alijayaNetAcs
 
-SILAHKAN YANG INGIN BERBAGI UANG KOPI
-
-
 user admin<br> pass admin <br>
 
 terima kasih https://www.gangtikus.net/ 
