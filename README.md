@@ -66,7 +66,7 @@ https://t.me/alijayaNetAcs
 
 user admin<br> pass admin <br>
 
-terima kasih https://www.gangtikus.net/ 
+terima kasih [https://www.gangtikus.net/ ](https://www.gangtikus.net/acs/git/)
 
 Spesial Thanks ❤️ Zaidka & AnperMyId
 
