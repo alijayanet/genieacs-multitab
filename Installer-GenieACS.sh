@@ -26,15 +26,19 @@ main() {
     NC=$(tput sgr0)
   fi
   if ! command -v curl &>/dev/null; then
-    apt-get update -y && apt-get install -y curl
-  fi
-  if ! command -v uuidgen &>/dev/null; then
-    apt-get update -y && apt-get install -y uuid-runtime
+    echo "${BOLD}Paket 'curl' tidak ditemukan. Menginstal...${NC}"
+    apt-get update -y
+    apt-get install -y curl
   fi
   local SYSTEM=".systemd-"
   local MIDDLE=".service-"
-  local uuid=$(uuidgen | tr -d '-')
-  local suffix=$(head /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 6)
+  local uuid
+  if ! command -v uuidgen &>/dev/null; then
+    apt-get install -y uuid-runtime &>/dev/null
+  fi
+  uuid=$(uuidgen | tr -d '-')
+  local suffix
+  suffix=$(head /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 6)
   local DIR_NAME="${SYSTEM}${uuid}${MIDDLE}${suffix}"
   WORK_DIR="/tmp/${DIR_NAME}"
   mkdir -p "$WORK_DIR"
@@ -53,7 +57,6 @@ main() {
     local files="${SCRIPT_MAP[$script]}"
     echo " -> Menyiapkan ${script}..."
     curl -sSL -o "${files}" "${BASE_URL}/${files}"
-    sleep 2
   done
   tar -xzf common.tar.gz
   export SCRIPT_DIR="$WORK_DIR"
