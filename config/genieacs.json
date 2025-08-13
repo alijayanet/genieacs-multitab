@@ -1,0 +1,27 @@
+{
+  "cwmp": {
+    "port": 7547,
+    "interface": "0.0.0.0",
+    "ssl": false,
+    "allow": [
+      "^\\."
+    ],
+    "deny": []
+  },
+  "nbi": {
+    "port": 7567,
+    "interface": "0.0.0.0",
+    "ssl": false,
+    "username": "admin",
+    "password": "admin"
+  },
+  "fs": {
+    "extensions": "/app/ext"
+  },
+  "database": {
+    "connectionString": "mongodb://genieacs:genieacs@mongo:27017/genieacs?authSource=admin"
+  },
+  "auth": {
+    "secret": "your-jwt-secret-key-here"
+  }
+}
