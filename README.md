@@ -84,7 +84,7 @@ reboot
 5. **Akses GenieACS**
    - Web UI: http://localhost:3000
      - Username: `admin`
-     - Password: `admin` (segera ganti setelah login pertama)
+     - Password: `admin` (menu virtualparameter dll di sembunyikan)
    - API: http://localhost:7557
    - CWMP (TR-069): `http://your-server-ip:7547`
 
@@ -191,6 +191,7 @@ docker-compose up -d
  2025 ALIJAYA ACS MULTITAB### SILAHKAN YANG INGIN BERBAGI
 
 ![Image](https://github.com/user-attachments/assets/724e5ac2-626e-4f2d-bd1f-1265b70b544f)
+
 
 
 
