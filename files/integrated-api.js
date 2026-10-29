@@ -968,36 +968,104 @@ router.post(['/api/bot_config', '/bot-proxy/api/config', '/bot-proxy/api/bot_con
 // GET /api/system/update_status
 router.get(['/api/system/update_status', '/bot-proxy/api/system/update_status'], async ctx => {
   const { execSync } = require('child_process');
-  let localHash = 'all-in-one';
-  let localDate = formatDate();
+  const repoDirs = ['/root/genieacs-multitab', '/opt/genieacs-multitab'];
+  let repoDir = repoDirs.find(d => fs.existsSync(path.join(d, '.git')));
+
+  if (!repoDir) {
+    repoDir = '/root/genieacs-multitab';
+    try {
+      execSync('git clone https://github.com/alijayanet/genieacs-multitab.git /root/genieacs-multitab', { timeout: 30000 });
+    } catch (e) {}
+  }
+
+  let localHash = '-', localDate = '-', localMsg = '';
+  let remoteHash = '-', remoteDate = '-', remoteMsg = '';
+  let commitsBehind = 0;
+  let hasUpdate = false;
+
   try {
-    const repoDirs = ['/root/genieacs-multitab-mod', '/opt/genieacs-multitab-mod'];
-    const repoDir = repoDirs.find(d => fs.existsSync(path.join(d, '.git')));
-    if (repoDir) {
+    if (fs.existsSync(path.join(repoDir, '.git'))) {
       localHash = execSync(`git -C "${repoDir}" rev-parse HEAD`, { timeout: 5000 }).toString().trim().slice(0, 7);
       localDate = execSync(`git -C "${repoDir}" log -1 --pretty="%cd" --date=format:"%Y-%m-%d %H:%M"`, { timeout: 5000 }).toString().trim();
+      localMsg = execSync(`git -C "${repoDir}" log -1 --pretty="%s"`, { timeout: 5000 }).toString().trim();
+
+      try {
+        execSync(`git -C "${repoDir}" fetch origin main`, { timeout: 20000 });
+        remoteHash = execSync(`git -C "${repoDir}" rev-parse origin/main`, { timeout: 5000 }).toString().trim().slice(0, 7);
+        remoteDate = execSync(`git -C "${repoDir}" log -1 --pretty="%cd" --date=format:"%Y-%m-%d %H:%M" origin/main`, { timeout: 5000 }).toString().trim();
+        remoteMsg = execSync(`git -C "${repoDir}" log -1 --pretty="%s" origin/main`, { timeout: 5000 }).toString().trim();
+
+        const behindStr = execSync(`git -C "${repoDir}" rev-list --count HEAD..origin/main`, { timeout: 5000 }).toString().trim();
+        commitsBehind = parseInt(behindStr, 10) || 0;
+        hasUpdate = commitsBehind > 0;
+      } catch (eFetch) {
+        remoteHash = localHash;
+        remoteDate = localDate;
+        remoteMsg = localMsg;
+      }
     }
-  } catch (e) {}
+  } catch (err) {
+    console.error('[Update Check Error]:', err.message);
+  }
 
   ctx.body = {
     success: true,
-    has_update: false,
+    has_update: hasUpdate,
     local_commit: localHash,
     local_date: localDate,
-    remote_commit: localHash,
-    remote_date: localDate,
-    remote_msg: 'GenieACS All-in-One Engine (Port 3000)',
-    commits_behind: 0
+    local_msg: localMsg,
+    remote_commit: remoteHash,
+    remote_date: remoteDate,
+    remote_msg: remoteMsg,
+    commits_behind: commitsBehind
   };
 });
 
 // POST /api/system/update_apply
 router.post(['/api/system/update_apply', '/bot-proxy/api/system/update_apply'], async ctx => {
-  ctx.body = {
-    success: true,
-    message: 'Sistem All-in-One GenieACS sudah berjalan pada versi terbaru.',
-    logs: 'Seluruh komponen (Peta, Portal WiFi, Bot Config, WhatsApp Agent) aktif di Port 3000.'
-  };
+  const { execSync } = require('child_process');
+  const logs = [];
+  const log = (msg) => logs.push(msg);
+  const repoDirs = ['/root/genieacs-multitab', '/opt/genieacs-multitab'];
+  let repoDir = repoDirs.find(d => fs.existsSync(path.join(d, '.git'))) || '/root/genieacs-multitab';
+
+  try {
+    log('🔄 [1/4] Mengambil pembaruan terbaru dari GitHub (alijayanet/genieacs-multitab)...');
+    if (!fs.existsSync(path.join(repoDir, '.git'))) {
+      execSync(`git clone https://github.com/alijayanet/genieacs-multitab.git "${repoDir}"`, { timeout: 40000 });
+      log('✅ Repositori berhasil dikloning.');
+    } else {
+      execSync(`git -C "${repoDir}" fetch origin main`, { timeout: 25000 });
+      execSync(`git -C "${repoDir}" reset --hard origin/main`, { timeout: 10000 });
+      log('✅ Kode terbaru berhasil ditarik (git pull/reset).');
+    }
+
+    log('📦 [2/4] Menerapkan skrip upgrade instalasi otomatis...');
+    const installScript = path.join(repoDir, 'install.sh');
+    if (fs.existsSync(installScript)) {
+      execSync(`chmod +x "${installScript}" && bash "${installScript}" --upgrade`, { timeout: 120000 });
+      log('✅ All-in-One modul berhasil diperbarui.');
+    }
+
+    log('🚀 [3/4] Merestart layanan GenieACS UI...');
+    setTimeout(() => {
+      try { execSync('systemctl restart genieacs-ui'); } catch (e) {}
+    }, 2000);
+
+    log('🎉 [4/4] Pembaruan selesai 100%!');
+    ctx.body = {
+      success: true,
+      message: 'Sistem All-in-One GenieACS berhasil diperbarui ke versi terbaru!',
+      logs: logs.join('\n')
+    };
+  } catch (err) {
+    log(`❌ Error pembaruan: ${err.message}`);
+    ctx.body = {
+      success: false,
+      error: err.message,
+      logs: logs.join('\n')
+    };
+  }
 });
 
 // POST /api/logout
