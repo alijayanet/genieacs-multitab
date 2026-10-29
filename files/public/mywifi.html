@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Portal Mandiri WiFi - Layanan Pelanggan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050833;
+      --card: #080d22;
+      --card-inner: #040714;
+      --border: #1c274c;
+      --primary: #00e5ff;
+      --primary-btn: #046380;
+      --primary-hover: #00b4d8;
+      --accent: #00ebb4;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --glow: rgba(0, 229, 255, 0.25);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background: radial-gradient(circle at 50% 0%, #0c153b 0%, var(--bg) 60%, #020417 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 16px;
+    }
+    .container {
+      width: 100%;
+      max-width: 480px;
+      margin: auto 0;
+      padding: 12px 0 32px;
+    }
+    .brand-header {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background: rgba(0, 229, 255, 0.12);
+      color: var(--primary);
+      font-size: 28px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(0, 229, 255, 0.35);
+      box-shadow: 0 0 20px var(--glow);
+    }
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.3px;
+    }
+    .brand-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 18px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      color: #64748b;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+    .form-control {
+      width: 100%;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px 12px 42px;
+      color: #ffffff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.2);
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.94rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-primary {
+      background: var(--primary-btn);
+      border: 1px solid var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(4, 99, 128, 0.4);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+      box-shadow: 0 0 16px var(--glow);
+    }
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+    }
+    .btn-secondary {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-secondary:hover {
+      background: #0f1c3f;
+      border-color: #38bdf8;
+    }
+    .btn-danger-outline {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+    .btn-danger-outline:hover {
+      background: #ef4444;
+      color: #ffffff;
+    }
+    .btn-success {
+      background: #059669;
+      border: 1px solid #10b981;
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+    .btn-success:hover {
+      background: #10b981;
+    }
+
+    /* OTP Inputs */
+    .otp-container {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 18px 0 22px;
+    }
+    .otp-input {
+      width: 56px;
+      height: 62px;
+      border-radius: 10px;
+      background: var(--card-inner);
+      border: 2px solid var(--border);
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: var(--primary);
+      text-align: center;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .otp-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.25);
+      background: #090e28;
+    }
+
+    /* Notification Alert */
+    .alert {
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-size: 0.84rem;
+      line-height: 1.45;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .alert-error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+    }
+    .alert-success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+    }
+
+    /* Status Grid */
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .status-box {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .status-box.full-width {
+      grid-column: span 2;
+    }
+    .status-title {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-val {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .badge-success {
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+    .badge-danger {
+      background: rgba(239, 68, 68, 0.18);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+    .badge-warning {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(28, 39, 76, 0.6);
+      font-size: 0.88rem;
+    }
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    .info-label {
+      color: var(--text-muted);
+    }
+    .info-value {
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(2, 4, 16, 0.8);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-dialog {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 400px;
+      padding: 24px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+      transform: translateY(10px) scale(0.96);
+      transition: transform 0.2s ease;
+    }
+    .modal-backdrop.active .modal-dialog {
+      transform: translateY(0) scale(1);
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer a:hover {
+      color: #7dd3fc;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .copy-btn {
+      background: rgba(4, 99, 128, 0.25);
+      border: 1px solid rgba(0, 229, 255, 0.35);
+      border-radius: 6px;
+      color: var(--primary);
+      padding: 4px 8px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .copy-btn:hover {
+      color: white;
+      background: var(--primary-btn);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Brand Header matching GenieACS -->
+    <div class="brand-header">
+      <div class="logo-badge">📶</div>
+      <h1 class="brand-title" id="brandTitle">Portal Mandiri WiFi</h1>
+      <p class="brand-subtitle" id="brandSubtitle">Layanan Mandiri Pelanggan Internet</p>
+    </div>
+
+    <!-- VIEW 1: REQUEST OTP / LOGIN -->
+    <div id="viewLogin" class="card">
+      <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px;" id="loginTitle">Masuk ke Akun WiFi Anda</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 18px;" id="loginSubtitle">
+        Masukkan nomor WhatsApp yang terdaftar pada jaringan kami untuk menerima kode verifikasi OTP.
+      </p>
+
+      <div id="loginAlert" style="display: none;"></div>
+
+      <form id="formRequestOtp">
+        <div class="form-group">
+          <label class="form-label" for="inputPhone" id="labelPhone">Nomor WhatsApp Pelanggan</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+            </span>
+            <input type="text" id="inputPhone" class="form-control" placeholder="Contoh: 081234567890" autocomplete="tel" required>
+          </div>
+        </div>
+
+        <button type="submit" id="btnRequestOtp" class="btn btn-primary">
+          <span id="btnTextOtp">Kirim Kode OTP (WhatsApp)</span>
+          <div id="btnSpinnerOtp" class="spinner" style="display: none;"></div>
+        </button>
+      </form>
+    </div>
+
+    <!-- VIEW 2: VERIFY OTP -->
+    <div id="viewOtp" class="card" style="display: none;">
+      <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px;">Verifikasi Kode OTP</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">
+        Kode 4 digit telah dikirim ke nomor WhatsApp: <br><strong style="color: #38bdf8;" id="maskedPhone">0812****</strong>
+      </p>
+
+      <div id="otpAlert" style="display: none; margin-top: 14px;"></div>
+
+      <div class="otp-container">
+        <input type="tel" maxlength="1" class="otp-input" inputmode="numeric" autocomplete="one-time-code" autofocus>
+        <input type="tel" maxlength="1" class="otp-input" inputmode="numeric">
+        <input type="tel" maxlength="1" class="otp-input" inputmode="numeric">
+        <input type="tel" maxlength="1" class="otp-input" inputmode="numeric">
+      </div>
+
+      <button type="button" id="btnVerifyOtp" class="btn btn-primary" style="margin-bottom: 12px;">
+        <span id="btnTextVerify">Verifikasi & Buka Layanan</span>
+        <div id="btnSpinnerVerify" class="spinner" style="display: none;"></div>
+      </button>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--text-muted);">
+        <a href="#" id="linkBackPhone" style="color: #94a3b8; text-decoration: none;">&larr; Ganti Nomor</a>
+        <span id="resendCountdown">Kirim ulang dalam <span id="resendTimer">45</span>s</span>
+        <a href="#" id="linkResendOtp" style="color: #38bdf8; text-decoration: none; display: none; font-weight: 600;">Kirim Ulang OTP</a>
+      </div>
+    </div>
+
+    <!-- VIEW 3: CUSTOMER DASHBOARD -->
+    <div id="viewDashboard" style="display: none;">
+      
+      <!-- Welcome Header -->
+      <div class="card" style="padding: 16px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.76rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Pelanggan Terhubung</div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: white;" id="dashCustName">Nama Pelanggan</div>
+            <div style="font-size: 0.8rem; color: #38bdf8; font-weight: 500;" id="dashPppoeUser">user@alijaya</div>
+          </div>
+          <button id="btnLogout" class="btn btn-secondary" style="width: auto; padding: 8px 12px; font-size: 0.8rem;">
+            Keluar
+          </button>
+        </div>
+      </div>
+
+      <div id="dashAlert" style="display: none;"></div>
+
+      <!-- Sinyal & Status Card -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h3 style="font-size: 0.95rem; font-weight: 700;">📡 Status Jaringan & Sinyal</h3>
+          <button id="btnRefreshStatus" class="copy-btn" title="Perbarui status">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Segarkan
+          </button>
+        </div>
+
+        <div class="status-grid">
+          <div class="status-box">
+            <div class="status-title">Status Koneksi</div>
+            <div id="dashOnlineStatus">
+              <span class="badge badge-success"><span class="pulse-dot"></span> Online</span>
+            </div>
+          </div>
+
+          <div class="status-box">
+            <div class="status-title">Perangkat Konek</div>
+            <div class="status-val" id="dashClientsCount">0 HP/Laptop</div>
+          </div>
+
+          <div class="status-box full-width">
+            <div class="status-title">Kualitas Sinyal Optik (RX Power)</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+              <span class="status-val" style="color: #38bdf8;" id="dashRxPower">-21.50 dBm</span>
+              <span id="dashRxBadge" class="badge badge-success">Sinyal Bagus</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Waktu Aktif Modem</span>
+          <span class="info-value" id="dashUptime">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Model Modem</span>
+          <span class="info-value" id="dashModel">-</span>
+        </div>
+      </div>
+
+      <!-- Card 1: Ubah Nama WiFi (SSID) -->
+      <div class="card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+            📶 Ubah Nama WiFi (SSID)
+          </h3>
+          <span style="font-size: 0.72rem; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 2px 8px; border-radius: 6px;">2.4 GHz</span>
+        </div>
+
+        <form id="formUpdateSsid">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" for="inputSsid">Nama WiFi (SSID)</label>
+            <div class="input-wrapper">
+              <span class="input-icon">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                </svg>
+              </span>
+              <input type="text" id="inputSsid" class="form-control" placeholder="Nama WiFi Baru" maxlength="32" required>
+            </div>
+            <div style="font-size: 0.74rem; color: #64748b; margin-top: 4px;">
+              Nama jaringan WiFi yang tampil saat HP / laptop memindai WiFi.
+            </div>
+          </div>
+
+          <button type="submit" id="btnSaveSsid" class="btn btn-primary" style="padding: 10px 14px; font-size: 0.88rem;">
+            <span id="btnTextSaveSsid">💾 Simpan Nama WiFi</span>
+            <div id="btnSpinnerSaveSsid" class="spinner" style="display: none;"></div>
+          </button>
+        </form>
+      </div>
+
+      <!-- Card 2: Ubah Sandi WiFi (Password) -->
+      <div class="card">
+        <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 6px;">
+          🔐 Ubah Kata Sandi (Password) WiFi
+        </h3>
+
+        <div class="info-row" style="background: rgba(15, 23, 42, 0.4); padding: 10px 12px; border-radius: 10px; margin-bottom: 14px;">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Sandi WiFi Saat Ini</div>
+            <div style="font-size: 1rem; font-weight: 700; letter-spacing: 0.05em;" id="displayCurrentPass">••••••••</div>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" id="btnTogglePeek" class="copy-btn">👁️ Intip</button>
+            <button type="button" id="btnCopyPass" class="copy-btn">📋 Salin</button>
+          </div>
+        </div>
+
+        <form id="formUpdatePass">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" for="inputPass">Kata Sandi Baru</label>
+            <div class="input-wrapper">
+              <span class="input-icon">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </span>
+              <input type="password" id="inputPass" class="form-control" placeholder="Minimal 8 karakter huruf / angka" minlength="8" maxlength="63" required>
+              <button type="button" id="btnTogglePassVisibility" style="position: absolute; right: 12px; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1rem;">👁️</button>
+            </div>
+            <div style="font-size: 0.74rem; color: #64748b; margin-top: 4px;">
+              Gunakan kombinasi minimal 8 karakter agar aman dari pembobolan.
+            </div>
+          </div>
+
+          <button type="submit" id="btnSavePass" class="btn btn-primary" style="padding: 10px 14px; font-size: 0.88rem; background: #0284c7;">
+            <span id="btnTextSavePass">💾 Simpan Kata Sandi</span>
+            <div id="btnSpinnerSavePass" class="spinner" style="display: none;"></div>
+          </button>
+        </form>
+      </div>
+
+      <!-- Quick Actions -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+        <button id="btnPromptReboot" class="btn btn-secondary" style="font-size: 0.85rem; padding: 12px;">
+          🔄 Restart Modem
+        </button>
+        <a id="btnChatCs" href="#" target="_blank" class="btn btn-success" style="font-size: 0.85rem; text-decoration: none; padding: 12px;">
+          💬 Bantuan CS
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Footer matching GenieACS -->
+    <div class="footer">
+      <p>&copy; <span id="footerBrand" style="color: var(--primary); font-weight: 600;">ALIJAYA NET</span> &bull; TR-069 ACS Self-Care Portal</p>
+    </div>
+  </div>
+
+  <!-- MODAL KONFIRMASI REBOOT -->
+  <div id="modalReboot" class="modal-backdrop">
+    <div class="modal-dialog">
+      <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">Mulai Ulang (Restart) Modem?</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">
+        Koneksi internet Anda akan terputus sementara selama 1-2 menit hingga lampu indikator modem normal kembali.
+      </p>
+      <div style="display: flex; gap: 10px;">
+        <button id="btnCancelReboot" class="btn btn-secondary" style="flex: 1;">Batal</button>
+        <button id="btnConfirmReboot" class="btn btn-danger-outline" style="flex: 1;">
+          <span id="textReboot">Ya, Restart</span>
+          <div id="spinnerReboot" class="spinner" style="display: none;"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // DYNAMIC API RESOLVER (AGNOSTIC: WORKS ON ANY DOMAIN, PORT 7558 OR PORT 3000)
+    // =========================================================================
+    function resolveApiUrl(path) {
+      const isProxy = window.location.port === '3000' || window.location.pathname.startsWith('/bot-proxy');
+      if (path.startsWith('/bot-proxy')) return path;
+      return isProxy ? `/bot-proxy${path}` : path;
+    }
+
+    async function apiRequest(path, method = 'GET', data = null, token = null) {
+      const url = resolveApiUrl(path);
+      const headers = { 'Content-Type': 'application/json' };
+      const authToken = token || localStorage.getItem('mywifi_token');
+      if (authToken) {
+        headers['X-Customer-Token'] = authToken;
+      }
+      const opts = { method, headers };
+      if (data && (method === 'POST' || method === 'PUT')) {
+        opts.body = JSON.stringify(data);
+      }
+      const res = await fetch(url, opts);
+      return await res.json();
+    }
+
+    // STATE
+    let currentPhone = '';
+    let resendTimerInterval = null;
+    let actualWifiPass = '';
+    let isPassRevealed = false;
+
+    // DOM ELEMENTS
+    const viewLogin = document.getElementById('viewLogin');
+    const viewOtp = document.getElementById('viewOtp');
+    const viewDashboard = document.getElementById('viewDashboard');
+
+    const formRequestOtp = document.getElementById('formRequestOtp');
+    const inputPhone = document.getElementById('inputPhone');
+    const btnRequestOtp = document.getElementById('btnRequestOtp');
+    const btnTextOtp = document.getElementById('btnTextOtp');
+    const btnSpinnerOtp = document.getElementById('btnSpinnerOtp');
+    const loginAlert = document.getElementById('loginAlert');
+
+    const otpInputs = document.querySelectorAll('.otp-input');
+    const btnVerifyOtp = document.getElementById('btnVerifyOtp');
+    const btnTextVerify = document.getElementById('btnTextVerify');
+    const btnSpinnerVerify = document.getElementById('btnSpinnerVerify');
+    const otpAlert = document.getElementById('otpAlert');
+    const maskedPhone = document.getElementById('maskedPhone');
+    const linkBackPhone = document.getElementById('linkBackPhone');
+    const resendCountdown = document.getElementById('resendCountdown');
+    const resendTimer = document.getElementById('resendTimer');
+    const linkResendOtp = document.getElementById('linkResendOtp');
+
+    const dashCustName = document.getElementById('dashCustName');
+    const dashPppoeUser = document.getElementById('dashPppoeUser');
+    const dashOnlineStatus = document.getElementById('dashOnlineStatus');
+    const dashClientsCount = document.getElementById('dashClientsCount');
+    const dashRxPower = document.getElementById('dashRxPower');
+    const dashRxBadge = document.getElementById('dashRxBadge');
+    const dashUptime = document.getElementById('dashUptime');
+    const dashModel = document.getElementById('dashModel');
+    const displayCurrentPass = document.getElementById('displayCurrentPass');
+    const btnTogglePeek = document.getElementById('btnTogglePeek');
+    const btnCopyPass = document.getElementById('btnCopyPass');
+    const inputSsid = document.getElementById('inputSsid');
+    const inputPass = document.getElementById('inputPass');
+    const formUpdateSsid = document.getElementById('formUpdateSsid');
+    const btnSaveSsid = document.getElementById('btnSaveSsid');
+    const btnTextSaveSsid = document.getElementById('btnTextSaveSsid');
+    const btnSpinnerSaveSsid = document.getElementById('btnSpinnerSaveSsid');
+
+    const formUpdatePass = document.getElementById('formUpdatePass');
+    const btnSavePass = document.getElementById('btnSavePass');
+    const btnTextSavePass = document.getElementById('btnTextSavePass');
+    const btnSpinnerSavePass = document.getElementById('btnSpinnerSavePass');
+    const btnRefreshStatus = document.getElementById('btnRefreshStatus');
+    const btnLogout = document.getElementById('btnLogout');
+    const btnChatCs = document.getElementById('btnChatCs');
+    const dashAlert = document.getElementById('dashAlert');
+
+    const modalReboot = document.getElementById('modalReboot');
+    const btnPromptReboot = document.getElementById('btnPromptReboot');
+    const btnCancelReboot = document.getElementById('btnCancelReboot');
+    const btnConfirmReboot = document.getElementById('btnConfirmReboot');
+
+    function showAlert(el, msg, type = 'error') {
+      el.className = `alert alert-${type}`;
+      el.innerHTML = msg;
+      el.style.display = 'flex';
+    }
+    function hideAlert(el) {
+      el.style.display = 'none';
+      el.innerHTML = '';
+    }
+
+    let isOtpRequired = true;
+    async function checkAuthConfig() {
+      try {
+        const cfg = await apiRequest('/api/customer/auth_config');
+        if (cfg && cfg.success) {
+          if (cfg.brand_name) {
+            document.querySelectorAll('#footerBrand').forEach(el => el.textContent = cfg.brand_name);
+            const sub = document.getElementById('brandSubtitle');
+            if (sub) sub.textContent = `Layanan Mandiri Pelanggan ${cfg.brand_name}`;
+          }
+          if (cfg.otp_enabled === false) {
+            isOtpRequired = false;
+            const sub = document.getElementById('loginSubtitle');
+            if (sub) sub.textContent = 'Masukkan nomor pelanggan atau nomor WhatsApp yang terdaftar untuk mengakses pengaturan WiFi Anda.';
+            const lbl = document.getElementById('labelPhone');
+            if (lbl) lbl.textContent = 'Nomor Pelanggan / WhatsApp';
+            btnTextOtp.textContent = 'Masuk ke Pengaturan WiFi';
+          } else {
+            isOtpRequired = true;
+            const sub = document.getElementById('loginSubtitle');
+            if (sub) sub.textContent = 'Masukkan nomor WhatsApp yang terdaftar pada jaringan kami untuk menerima kode verifikasi OTP.';
+            const lbl = document.getElementById('labelPhone');
+            if (lbl) lbl.textContent = 'Nomor WhatsApp Pelanggan';
+            btnTextOtp.textContent = 'Kirim Kode OTP (WhatsApp)';
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 1. REQUEST OTP HANDLER
+    formRequestOtp.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert(loginAlert);
+      const phone = inputPhone.value.trim();
+      if (!phone) return;
+
+      btnRequestOtp.disabled = true;
+      btnTextOtp.textContent = isOtpRequired ? 'Memeriksa & Mengirim OTP...' : 'Memeriksa akun...';
+      btnSpinnerOtp.style.display = 'inline-block';
+
+      try {
+        const res = await apiRequest('/api/customer/request_otp', 'POST', { phone });
+        if (res.success) {
+          if (res.otp_required === false && res.token) {
+            localStorage.setItem('mywifi_token', res.token);
+            viewLogin.style.display = 'none';
+            viewOtp.style.display = 'none';
+            loadDashboard();
+            return;
+          }
+          currentPhone = phone;
+          maskedPhone.textContent = phone.replace(/(\d{4})\d+(\d{3})/, '$1****$2');
+          viewLogin.style.display = 'none';
+          viewOtp.style.display = 'block';
+          otpInputs.forEach(i => i.value = '');
+          otpInputs[0].focus();
+          startResendCountdown(res.cooldown || 45);
+        } else {
+          showAlert(loginAlert, res.error || 'Nomor tidak terdaftar atau terjadi kesalahan.');
+        }
+      } catch (err) {
+        showAlert(loginAlert, 'Gagal menghubungi server. Periksa koneksi Anda.');
+      } finally {
+        btnRequestOtp.disabled = false;
+        btnTextOtp.textContent = isOtpRequired ? 'Kirim Kode OTP (WhatsApp)' : 'Masuk ke Pengaturan WiFi';
+        btnSpinnerOtp.style.display = 'none';
+      }
+    });
+
+    // 2. OTP INPUT AUTO-JUMP & PASTE
+    otpInputs.forEach((input, idx) => {
+      input.addEventListener('input', (e) => {
+        const val = e.target.value.replace(/\D/g, '');
+        e.target.value = val ? val[val.length - 1] : '';
+        if (val && idx < otpInputs.length - 1) {
+          otpInputs[idx + 1].focus();
+        }
+        checkOtpFilled();
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !input.value && idx > 0) {
+          otpInputs[idx - 1].focus();
+        }
+      });
+
+      input.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const pasteData = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 4);
+        pasteData.split('').forEach((char, i) => {
+          if (otpInputs[i]) otpInputs[i].value = char;
+        });
+        if (pasteData.length > 0) {
+          const nextIdx = Math.min(pasteData.length, otpInputs.length - 1);
+          otpInputs[nextIdx].focus();
+        }
+        checkOtpFilled();
+      });
+    });
+
+    function checkOtpFilled() {
+      const code = Array.from(otpInputs).map(i => i.value).join('');
+      if (code.length === 4) {
+        verifyOtp(code);
+      }
+    }
+
+    btnVerifyOtp.addEventListener('click', () => {
+      const code = Array.from(otpInputs).map(i => i.value).join('');
+      if (code.length === 4) verifyOtp(code);
+    });
+
+    async function verifyOtp(otp) {
+      hideAlert(otpAlert);
+      btnVerifyOtp.disabled = true;
+      btnTextVerify.textContent = 'Memverifikasi...';
+      btnSpinnerVerify.style.display = 'inline-block';
+
+      try {
+        const res = await apiRequest('/api/customer/verify_otp', 'POST', { phone: currentPhone, otp });
+        if (res.success && res.token) {
+          localStorage.setItem('mywifi_token', res.token);
+          viewOtp.style.display = 'none';
+          loadDashboard();
+        } else {
+          showAlert(otpAlert, res.error || 'Kode OTP salah atau telah kedaluwarsa.');
+          otpInputs.forEach(i => i.value = '');
+          otpInputs[0].focus();
+        }
+      } catch (err) {
+        showAlert(otpAlert, 'Terjadi gangguan verifikasi. Silakan coba lagi.');
+      } finally {
+        btnVerifyOtp.disabled = false;
+        btnTextVerify.textContent = 'Verifikasi & Buka Layanan';
+        btnSpinnerVerify.style.display = 'none';
+      }
+    }
+
+    linkBackPhone.addEventListener('click', (e) => {
+      e.preventDefault();
+      viewOtp.style.display = 'none';
+      viewLogin.style.display = 'block';
+      hideAlert(loginAlert);
+      clearInterval(resendTimerInterval);
+    });
+
+    function startResendCountdown(sec = 45) {
+      let rem = sec;
+      resendCountdown.style.display = 'inline';
+      linkResendOtp.style.display = 'none';
+      resendTimer.textContent = rem;
+      clearInterval(resendTimerInterval);
+      resendTimerInterval = setInterval(() => {
+        rem--;
+        resendTimer.textContent = rem;
+        if (rem <= 0) {
+          clearInterval(resendTimerInterval);
+          resendCountdown.style.display = 'none';
+          linkResendOtp.style.display = 'inline';
+        }
+      }, 1000);
+    }
+
+    linkResendOtp.addEventListener('click', async (e) => {
+      e.preventDefault();
+      hideAlert(otpAlert);
+      try {
+        const res = await apiRequest('/api/customer/request_otp', 'POST', { phone: currentPhone });
+        if (res.success) {
+          showAlert(otpAlert, 'Kode OTP baru telah dikirim ke WhatsApp Anda.', 'success');
+          startResendCountdown(45);
+        } else {
+          showAlert(otpAlert, res.error || 'Gagal mengirim ulang OTP.');
+        }
+      } catch (_) {
+        showAlert(otpAlert, 'Gagal terhubung ke server.');
+      }
+    });
+
+    // 3. DASHBOARD LOADER
+    async function loadDashboard() {
+      try {
+        const res = await apiRequest('/api/customer/info');
+        if (res.success && res.data) {
+          renderDashboardData(res.data);
+          viewLogin.style.display = 'none';
+          viewOtp.style.display = 'none';
+          viewDashboard.style.display = 'block';
+        } else {
+          localStorage.removeItem('mywifi_token');
+          viewDashboard.style.display = 'none';
+          viewLogin.style.display = 'block';
+          if (res.error) showAlert(loginAlert, res.error);
+        }
+      } catch (err) {
+        viewDashboard.style.display = 'none';
+        viewLogin.style.display = 'block';
+      }
+    }
+
+    function renderDashboardData(data) {
+      // Dynamic Branding
+      if (data.brand_name) {
+        document.title = `Portal Mandiri WiFi - ${data.brand_name}`;
+        document.getElementById('brandTitle').textContent = data.brand_name;
+        document.getElementById('footerBrand').textContent = data.brand_name;
+      }
+      if (data.brand_phone) {
+        btnChatCs.href = `https://wa.me/${data.brand_phone.replace(/\D/g, '')}?text=Halo%20CS%20${encodeURIComponent(data.brand_name || 'WiFi')},%20saya%20pelanggan%20${encodeURIComponent(data.customer_name || data.pppoe_user)}%20ingin%20bertanya%20seputar%20layanan.`;
+      }
+
+      dashCustName.textContent = data.customer_name || 'Pelanggan Setia';
+      dashPppoeUser.textContent = data.pppoe_user ? `ID PPPoE: ${data.pppoe_user}` : '';
+
+      // Online status
+      if (data.online) {
+        dashOnlineStatus.innerHTML = '<span class="badge badge-success"><span class="pulse-dot"></span> Online (Normal)</span>';
+      } else {
+        dashOnlineStatus.innerHTML = '<span class="badge badge-danger"><span class="pulse-dot"></span> Terputus (Offline)</span>';
+      }
+
+      dashClientsCount.textContent = `${data.clients_count || 0} HP/Laptop`;
+      dashRxPower.textContent = data.rx_power || '-';
+      dashRxBadge.textContent = data.rx_badge_text || 'Sinyal Normal';
+      dashRxBadge.className = `badge ${data.rx_badge_class || 'badge-success'}`;
+
+      dashUptime.textContent = data.uptime || '-';
+      dashModel.textContent = data.model || 'ONT Router';
+
+      // WiFi Details
+      inputSsid.value = data.ssid || '';
+      actualWifiPass = data.wifi_password || '';
+      updateMaskedPass();
+    }
+
+    function updateMaskedPass() {
+      if (isPassRevealed) {
+        displayCurrentPass.textContent = actualWifiPass || '(Tidak terdeteksi)';
+        btnTogglePeek.textContent = '🙈 Tutup';
+      } else {
+        displayCurrentPass.textContent = actualWifiPass ? '••••••••••••' : '(Tersimpan di Modem)';
+        btnTogglePeek.textContent = '👁️ Intip';
+      }
+    }
+
+    btnTogglePeek.addEventListener('click', () => {
+      isPassRevealed = !isPassRevealed;
+      updateMaskedPass();
+    });
+
+    btnCopyPass.addEventListener('click', () => {
+      if (!actualWifiPass) return;
+      navigator.clipboard.writeText(actualWifiPass).then(() => {
+        btnCopyPass.textContent = '✔ Disalin!';
+        setTimeout(() => btnCopyPass.textContent = '📋 Salin', 2000);
+      });
+    });
+
+    document.getElementById('btnTogglePassVisibility').addEventListener('click', () => {
+      inputPass.type = inputPass.type === 'password' ? 'text' : 'password';
+    });
+
+    // 4A. UPDATE SSID HANDLER (TERPISAH)
+    formUpdateSsid.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert(dashAlert);
+      const ssid = inputSsid.value.trim();
+      if (!ssid) return showAlert(dashAlert, 'Nama WiFi tidak boleh kosong.');
+
+      if (!confirm(`Konfirmasi Ubah Nama WiFi:\n\n• Nama Baru: ${ssid}\n\nPerangkat Anda akan terputus sesaat dan perlu memilih nama WiFi baru ini untuk menyambung kembali. Lanjutkan?`)) {
+        return;
+      }
+
+      btnSaveSsid.disabled = true;
+      btnTextSaveSsid.textContent = 'Menyimpan Nama WiFi...';
+      btnSpinnerSaveSsid.style.display = 'inline-block';
+
+      try {
+        const res = await apiRequest('/api/customer/update_wifi', 'POST', { ssid });
+        if (res.success) {
+          showAlert(dashAlert, `🎉 <strong>Berhasil!</strong> Nama WiFi berhasil diubah menjadi: <strong>${ssid}</strong>.<br>Silakan sambungkan kembali HP/laptop Anda ke nama WiFi baru ini.`, 'success');
+        } else {
+          showAlert(dashAlert, res.error || 'Gagal mengubah nama WiFi modem.');
+        }
+      } catch (_) {
+        showAlert(dashAlert, 'Gagal menghubungi server. Silakan coba kembali.');
+      } finally {
+        btnSaveSsid.disabled = false;
+        btnTextSaveSsid.textContent = '💾 Simpan Nama WiFi';
+        btnSpinnerSaveSsid.style.display = 'none';
+      }
+    });
+
+    // 4B. UPDATE PASSWORD HANDLER (TERPISAH)
+    formUpdatePass.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert(dashAlert);
+      const password = inputPass.value.trim();
+      if (password.length < 8) return showAlert(dashAlert, 'Kata sandi minimal harus 8 karakter.');
+
+      if (!confirm(`Konfirmasi Ubah Kata Sandi:\n\n• Sandi Baru: ${password}\n\nPerangkat Anda akan terputus dan harus memasukkan kata sandi baru ini. Lanjutkan?`)) {
+        return;
+      }
+
+      btnSavePass.disabled = true;
+      btnTextSavePass.textContent = 'Menyimpan Kata Sandi...';
+      btnSpinnerSavePass.style.display = 'inline-block';
+
+      try {
+        const res = await apiRequest('/api/customer/update_wifi', 'POST', { password });
+        if (res.success) {
+          actualWifiPass = password;
+          updateMaskedPass();
+          inputPass.value = '';
+          showAlert(dashAlert, `🎉 <strong>Berhasil!</strong> Kata sandi WiFi berhasil diperbarui menjadi: <strong>${password}</strong>.<br>Silakan sambungkan kembali HP/laptop Anda menggunakan sandi baru ini.`, 'success');
+        } else {
+          showAlert(dashAlert, res.error || 'Gagal mengubah kata sandi WiFi modem.');
+        }
+      } catch (_) {
+        showAlert(dashAlert, 'Gagal menghubungi server. Silakan coba kembali.');
+      } finally {
+        btnSavePass.disabled = false;
+        btnTextSavePass.textContent = '💾 Simpan Kata Sandi';
+        btnSpinnerSavePass.style.display = 'none';
+      }
+    });
+
+    // 5. REFRESH STATUS
+    btnRefreshStatus.addEventListener('click', async () => {
+      btnRefreshStatus.disabled = true;
+      btnRefreshStatus.innerHTML = '<div class="spinner" style="width: 12px; height: 12px;"></div>';
+      await loadDashboard();
+      btnRefreshStatus.disabled = false;
+      btnRefreshStatus.innerHTML = `
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg> Segarkan`;
+    });
+
+    // 6. REBOOT MODEM
+    btnPromptReboot.addEventListener('click', () => {
+      modalReboot.classList.add('active');
+    });
+    btnCancelReboot.addEventListener('click', () => {
+      modalReboot.classList.remove('active');
+    });
+    btnConfirmReboot.addEventListener('click', async () => {
+      document.getElementById('textReboot').textContent = 'Memproses...';
+      document.getElementById('spinnerReboot').style.display = 'inline-block';
+      btnConfirmReboot.disabled = true;
+
+      try {
+        const res = await apiRequest('/api/customer/reboot', 'POST');
+        modalReboot.classList.remove('active');
+        if (res.success) {
+          showAlert(dashAlert, '🔄 Sinyal restart telah dikirim ke modem Anda. Mohon tunggu 1-2 menit hingga lampu indikator PON/Internet menyala stabil kembali.', 'success');
+        } else {
+          showAlert(dashAlert, res.error || 'Gagal mengirim sinyal restart ke modem.');
+        }
+      } catch (_) {
+        showAlert(dashAlert, 'Gagal terhubung ke server.');
+      } finally {
+        document.getElementById('textReboot').textContent = 'Ya, Restart';
+        document.getElementById('spinnerReboot').style.display = 'none';
+        btnConfirmReboot.disabled = false;
+      }
+    });
+
+    // 7. LOGOUT
+    btnLogout.addEventListener('click', async () => {
+      if (confirm('Apakah Anda yakin ingin keluar dari Portal Mandiri WiFi?')) {
+        await apiRequest('/api/customer/logout', 'POST').catch(() => {});
+        localStorage.removeItem('mywifi_token');
+        viewDashboard.style.display = 'none';
+        viewLogin.style.display = 'block';
+        inputPhone.value = '';
+        hideAlert(loginAlert);
+      }
+    });
+
+    // AUTO LOGIN ON PAGE LOAD
+    checkAuthConfig();
+    if (localStorage.getItem('mywifi_token')) {
+      loadDashboard();
+    }
+  </script>
+</body>
+</html>

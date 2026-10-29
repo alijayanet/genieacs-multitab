@@ -1,0 +1,3502 @@
+{
+  "virtualParameters": [
+    {
+      "_id": "WlanPassword",
+      "script": "// virtual parameter for WPA passphrase\nlet m = \"\";\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase\", null, {value: m});\n  declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase\", null, {value: m});\n}\nelse {\n  let d = declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase\", {value: 1});\n  let igd = declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase\", {value: 1});\n\n  if (d.size && d.value && d.value[0]) {\n    m = d.value[0];\n  }\n  else if (igd.size && igd.value && igd.value[0]) {\n    m = igd.value[0];\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:string\"]};\n"
+    },
+    {
+      "_id": "userconnected",
+      "script": "// Total active all ssid\nlet active = 0;\nlet isNumber = (value) => {\n  return typeof value === \"number\" && isFinite(value);\n};\n\nlet ssid1 = declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TotalAssociations\", {value: 1});\n\nif (ssid1 && ssid1.size && isNumber(ssid1.value[0])) {\n  active += ssid1.value[0];\n}\n\nreturn {writable: false, value: [String(active), \"xsd:unsignedInt\"]};\n"
+    },
+    {
+      "_id": "MacAddress",
+      "script": "// ALIJAYA NET - Universal MAC Address\nlet mac = \"\";\nlet paths = [\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.MACAddress\",\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.MACAddress\",\n  \"InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MACAddress\",\n  \"InternetGatewayDevice.DeviceInfo.X_CU_SerialNumber\",\n  \"Device.PPP.Interface.*.MACAddress\"\n];\n\nfor (let i = 0; i < paths.length; i++) {\n  let d = declare(paths[i], {value: 1});\n  for (let p of d) {\n    if (p.value && p.value[0] && typeof p.value[0] === 'string') {\n      let val = p.value[0].trim();\n      if (val !== \"\" && val !== \"00:00:00:00:00:00\" && val.includes(\":\")) {\n        mac = val;\n        break;\n      }\n    }\n  }\n  if (mac !== \"\") break;\n}\n\nreturn {writable: false, value: [mac || \"Ethernet\", \"xsd:string\"]};"
+    },
+    {
+      "_id": "uptimeDevice",
+      "script": "// ALIJAYA NET - Universal PPPoE Uptime\nlet totalSecs = 0;\nlet paths = [\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Uptime\",\n  \"InternetGatewayDevice.DeviceInfo.UpTime\",\n  \"Device.DeviceInfo.UpTime\"\n];\n\nfor (let i = 0; i < paths.length; i++) {\n  let d = declare(paths[i], {value: 1});\n  for (let p of d) {\n    if (p.value && p.value[0] !== undefined) {\n      let s = parseInt(p.value[0], 10);\n      if (!isNaN(s) && s > 0) {\n        totalSecs = s;\n        break;\n      }\n    }\n  }\n  if (totalSecs > 0) break;\n}\n\nif (totalSecs <= 0) {\n  return {writable: false, value: [\"0d 00:00:00\", \"xsd:string\"]};\n}\n\nlet days = Math.floor(totalSecs / 86400);\nlet rem  = totalSecs % 86400;\nlet hrs  = Math.floor(rem / 3600);\nlet mins = Math.floor((rem % 3600) / 60);\nlet secs = rem % 60;\n\nlet pad = (n) => (n < 10 ? \"0\" + n : \"\" + n);\nlet uptime = days + \"d \" + pad(hrs) + \":\" + pad(mins) + \":\" + pad(secs);\n\nreturn {writable: false, value: [uptime, \"xsd:string\"]};"
+    },
+    {
+      "_id": "pppUsername",
+      "script": "// ALIJAYA NET - Universal PPPoE Username\nlet username = \"N/A\";\nlet paths = [\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Username\",\n  \"Device.PPP.Interface.*.Username\"\n];\n\nfor (let i = 0; i < paths.length; i++) {\n  let d = declare(paths[i], {value: 1});\n  for (let p of d) {\n    if (p.value && p.value[0] !== undefined && p.value[0] !== null && p.value[0] !== \"\") {\n      let val = String(p.value[0]).trim();\n      if (val !== \"\") {\n        username = val;\n        break;\n      }\n    }\n  }\n  if (username !== \"N/A\") break;\n}\n\nreturn {writable: false, value: [username, \"xsd:string\"]};"
+    },
+    {
+      "_id": "redaman",
+      "script": "let zte = declare(\"InternetGatewayDevice.WANDevice.*.X_ZTE-COM_WANPONInterfaceConfig.RXPower\", { value: Date.now() });\nlet huawei = declare(\"InternetGatewayDevice.WANDevice.*.X_GponInterafceConfig.RXPower\", { value: Date.now() });\nlet fiberhome = declare(\"InternetGatewayDevice.WANDevice.*.X_FH_GponInterfaceConfig.RXPower\", { value: Date.now() });\nlet ztecmcc = declare(\"InternetGatewayDevice.WANDevice.*.X_CMCC_EponInterfaceConfig.RXPower\", { value: Date.now() });\nlet ztecmcg = declare(\"InternetGatewayDevice.WANDevice.*.X_CMCC_GponInterfaceConfig.RXPower\", { value: Date.now() });\nlet gm220se = declare(\"InternetGatewayDevice.WANDevice.*.X_CT-COM_EponInterfaceConfig.RXPower\", { value: Date.now() });\nlet gm220sg = declare(\"InternetGatewayDevice.WANDevice.*.X_CT-COM_GponInterfaceConfig.RXPower\", { value: Date.now() });\nlet f477v2 = declare(\"InternetGatewayDevice.WANDevice.*.X_CU_WANEPONInterfaceConfig.OpticalTransceiver.RXPower\", { value: Date.now() });\n\nlet m = \"\";\nif (zte.value !== undefined) { m = (zte.value[0] / 100 - 100).toFixed(2); }\nelse if (huawei.value !== undefined) { m = (huawei.value[0] / 100).toFixed(2); }\nelse if (fiberhome.value !== undefined) { m = (fiberhome.value[0] / 100).toFixed(2); }\nelse if (ztecmcc.value !== undefined) { m = (ztecmcc.value[0] / 1000).toFixed(2); }\nelse if (ztecmcg.value !== undefined) { m = (ztecmcg.value[0] / 500 - 40).toFixed(2); }\nelse if (gm220se.value !== undefined) { m = (gm220se.value[0] / 10000).toFixed(2); }\nelse if (gm220sg.value !== undefined) { m = (gm220sg.value[0] / 10000).toFixed(2); }\nelse if (f477v2.value !== undefined) { m = (f477v2.value[0] / 100).toFixed(2); }\n\nreturn {writable: false, value: [m || \"-\", \"xsd:string\"]};\n"
+    },
+    {
+      "_id": "pppIP",
+      "script": "// ALIJAYA NET - Universal PPPoE External IP\nlet ip = \"\";\nlet paths = [\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.ExternalIPAddress\",\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.ExternalIPAddress\",\n  \"Device.IP.Interface.*.IPv4Address.*.IPAddress\"\n];\n\nfor (let i = 0; i < paths.length; i++) {\n  let d = declare(paths[i], {value: 1});\n  for (let p of d) {\n    if (p.value && p.value[0] !== undefined && p.value[0] !== null) {\n      let val = String(p.value[0]).trim();\n      if (val !== \"\" && val !== \"0.0.0.0\") {\n        ip = val;\n        break;\n      }\n    }\n  }\n  if (ip !== \"\") break;\n}\n\nreturn {writable: false, value: [ip, \"xsd:string\"]};"
+    },
+    {
+      "_id": "tr069",
+      "script": "const brand = declare('DeviceID.Manufacturer', { value: 1 }).value[0];\n\nif (\n    brand === 'Huawei Technologies Co., Ltd' || brand === 'ZTE' || brand === 'FiberHome' || brand === 'CIOT') {\nlet result = '';\n\nif (\"value\" in args[1]) {\n    result = args[1].value[0];\n} else {\n    let keys = [\n        \"InternetGatewayDevice.WANDevice.1.WANConnectionDevice.*.WANIPConnection.*.ExternalIPAddress\",\n       // \"InternetGatewayDevice.WANDevice.1.WANConnectionDevice.*.WANIPConnection.2.ExternalIPAddress\"\n    ];\n\n    result = getParameterValue(keys);\n}\n\nlog(\"IPTR069: \" + result);\nreturn {writable: false, value: [result, \"xsd:string\"]};\n\nfunction getParameterValue(keys) {\n    for (let key of keys) {\n        let d = declare(key, {path: Date.now() - (120 * 1000), value: Date.now()});\n\n        for (let item of d) {\n            if (item.value && item.value[0]) {\n                return item.value[0];\n            }\n        }\n    }\n\n    return '';\n}\n}\n"
+    },
+    {
+      "_id": "PonMode",
+      "script": "const brand = declare('DeviceID.Manufacturer', {value: 1}).value[0];\n\nif (brand === 'Huawei Technologies Co., Ltd' || brand === 'ZTE' || brand === 'FiberHome' || brand === 'CIOT') {\nlet pon = \"\";\nif (args[1].value) {\n  pon = args[1].value[0];\n  declare(\"InternetGatewayDevice.DeviceInfo.X_HW_UpPortMode\", {value: Date.now()});\n  \n}\nelse {\n  \n  let v1 = declare(\"InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.WANAccessType\", {value: Date.now()});\n\n  if (v1.size) {\n    pon = v1.value[0];\n  }\n}\n\npon = pon.toUpperCase();\n\nif (pon.includes(\"EPON\")) {\n  pon = \"EPON\";\n} else if (pon.includes(\"GPON\")) {\n  pon = \"GPON\";\n} else if (pon.includes(\"PON\")) {\n  pon = \"GPON\";\n} else {\n  pon = \"Ethernet\";\n}\n\n\nreturn {writable: false, value: [pon, \"xsd:string\"]};\n}"
+    },
+    {
+      "_id": "softwareVersion",
+      "script": "const brand = declare('DeviceID.Manufacturer', {value: 1}).value[0];\n\nif (brand === 'Huawei Technologies Co., Ltd' || brand === 'ZTE' || brand === 'FiberHome' || brand === 'CIOT') {\nlet result = '';\n\nif (\"value\" in args[1]) {\n    result = args[1].value[0];\n} else {\n    let keys = [\n        'InternetGatewayDevice.DeviceInfo.SoftwareVersion',\n      \t'Device.DeviceInfo.SoftwareVersion',\n    ];\n\n    result = getParameterValue(keys);\n}\n\nlog('SoftwareVersion: ' + result);\nreturn {writable: false, value: [result, \"xsd:string\"]};\n\nfunction getParameterValue(keys) {\n    for (let key of keys) {\n        let d = declare(key, {path: Date.now() - (120 * 1000), value: Date.now()});\n\n        for (let item of d) {\n            if (item.value && item.value[0]) {\n                return item.value[0];\n            }\n        }\n    }\n\n    return '';\n}\n}"
+    },
+    {
+      "_id": "uptime",
+      "script": "const brandDecl = declare(DeviceID.Manufacturer, {value: 1});\nconst brand = (brandDecl && brandDecl.value && brandDecl.value[0]) ? brandDecl.value[0] : \"\";\n\nconst now = Date.now();\nconst upTimeParam = declare(\"Device.DeviceInfo.UpTime\", {value: now});\nconst uptimeParam = declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Uptime\", {value: now});\n\nlet totalSecs = 0;\nif (uptimeParam && uptimeParam.value && uptimeParam.value.length > 0) {\n  totalSecs += parseInt(uptimeParam.value[0], 10) || 0;\n}\nif (upTimeParam && upTimeParam.value && upTimeParam.value.length > 0) {\n  totalSecs += parseInt(upTimeParam.value[0], 10) || 0;\n}\n\nconst totalMillisecs = totalSecs * 1000;\nreturn {writable: false, value: [String(totalMillisecs), \"xsd:unsignedInt\"]};\n"
+    },
+    {
+      "_id": "activedevices",
+      "script": "// ALIJAYA NET - Active WiFi Devices\nlet active = 0;\nlet paths = [\n  \"InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.TotalAssociations\",\n  \"InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.AssociatedDeviceNumberOfEntries\",\n  \"Device.WiFi.AccessPoint.*.AssociatedDeviceNumberOfEntries\"\n];\n\nfor (let p of paths) {\n  let d = declare(p, {value: 1});\n  for (let item of d) {\n    if (item.value && item.value[0] !== undefined) {\n      let count = parseInt(item.value[0], 10);\n      if (!isNaN(count) && count > 0) {\n        active += count;\n      }\n    }\n  }\n  if (active > 0) break;\n}\n\nreturn {writable: false, value: [active, \"xsd:int\"]};"
+    },
+    {
+      "_id": "temp",
+      "script": "// ALIJAYA NET - Temperature\nlet m = \"N/A\";\nlet paths = [\n  \"InternetGatewayDevice.WANDevice.*.X_ZTE-COM_WANPONInterfaceConfig.TransceiverTemperature\",\n  \"InternetGatewayDevice.WANDevice.*.X_CT-COM_EponInterfaceConfig.TransceiverTemperature\",\n  \"InternetGatewayDevice.WANDevice.*.X_CT-COM_GponInterfaceConfig.TransceiverTemperature\",\n  \"InternetGatewayDevice.WANDevice.*.X_GponInterafceConfig.TransceiverTemperature\",\n  \"InternetGatewayDevice.WANDevice.*.X_FH_GponInterfaceConfig.TransceiverTemperature\",\n  \"InternetGatewayDevice.WANDevice.*.X_CMCC_EponInterfaceConfig.TransceiverTemperature\",\n  \"InternetGatewayDevice.WANDevice.*.X_CMCC_GponInterfaceConfig.TransceiverTemperature\"\n];\n\nfor (let p of paths) {\n  let d = declare(p, {value: 1});\n  for (let item of d) {\n    if (item.value && item.value[0] !== undefined) {\n      let val = parseFloat(item.value[0]);\n      if (!isNaN(val)) {\n        if (val < 150 && val > 0) {\n          m = Math.round(val).toString();\n        } else if (val >= 150) {\n          let temp = val / 256;\n          if (temp > 100 || temp < 10) {\n            temp = (val * 0.0038) + 1.5;\n          }\n          m = Math.round(temp).toString();\n        }\n        if (m !== \"N/A\") break;\n      }\n    }\n  }\n  if (m !== \"N/A\") break;\n}\n\nreturn {writable: false, value: [m, \"xsd:string\"]};"
+    },
+    {
+      "_id": "IPTR069",
+      "script": "// ALIJAYA NET - IP TR-069\nlet result = \"\";\nlet keys = [\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.ExternalIPAddress\",\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.ExternalIPAddress\",\n  \"Device.IP.Interface.*.IPv4Address.*.IPAddress\"\n];\n\nfor (let key of keys) {\n  let d = declare(key, {value: 1});\n  for (let item of d) {\n    if (item.value && item.value[0] && item.value[0] !== \"0.0.0.0\") {\n      result = String(item.value[0]).trim();\n      break;\n    }\n  }\n  if (result !== \"\") break;\n}\n\nreturn {writable: false, value: [result, \"xsd:string\"]};"
+    },
+    {
+      "_id": "PonMac",
+      "script": "// ALIJAYA NET - Universal MAC Address\nlet mac = \"\";\nlet paths = [\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.MACAddress\",\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.MACAddress\",\n  \"InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MACAddress\",\n  \"InternetGatewayDevice.DeviceInfo.X_CU_SerialNumber\",\n  \"Device.PPP.Interface.*.MACAddress\"\n];\n\nfor (let i = 0; i < paths.length; i++) {\n  let d = declare(paths[i], {value: 1});\n  for (let p of d) {\n    if (p.value && p.value[0] && typeof p.value[0] === 'string') {\n      let val = p.value[0].trim();\n      if (val !== \"\" && val !== \"00:00:00:00:00:00\" && val.includes(\":\")) {\n        mac = val;\n        break;\n      }\n    }\n  }\n  if (mac !== \"\") break;\n}\n\nreturn {writable: false, value: [mac || \"Ethernet\", \"xsd:string\"]};"
+    },
+    {
+      "_id": "RXPower",
+      "script": "// ALIJAYA NET - Universal RXPower\nlet m = \"N/A\";\nlet paths = [\n  \"InternetGatewayDevice.WANDevice.*.X_ZTE-COM_WANPONInterfaceConfig.RXPower\",\n  \"InternetGatewayDevice.WANDevice.*.X_CT-COM_EponInterfaceConfig.RXPower\",\n  \"InternetGatewayDevice.WANDevice.*.X_CT-COM_GponInterfaceConfig.RXPower\",\n  \"InternetGatewayDevice.WANDevice.*.X_GponInterafceConfig.RXPower\",\n  \"InternetGatewayDevice.WANDevice.*.X_FH_GponInterfaceConfig.RXPower\",\n  \"InternetGatewayDevice.WANDevice.*.X_CMCC_EponInterfaceConfig.RXPower\",\n  \"InternetGatewayDevice.WANDevice.*.X_CMCC_GponInterfaceConfig.RXPower\",\n  \"InternetGatewayDevice.WANDevice.*.X_CU_WANEPONInterfaceConfig.OpticalTransceiver.RXPower\"\n];\n\nfor (let i = 0; i < paths.length; i++) {\n  let d = declare(paths[i], {value: 1});\n  for (let p of d) {\n    if (p.value && p.value[0] !== undefined && p.value[0] !== null && p.value[0] !== \"\") {\n      let raw = parseFloat(p.value[0]);\n      if (isNaN(raw)) continue;\n\n      if (raw < 0 && raw > -50) {\n        m = raw.toFixed(2);\n      } else if (raw <= -50) {\n        m = (raw / 100).toFixed(2);\n      } else if (raw > 0) {\n        let dbm = 30 + (Math.log10(raw * 1e-7) * 10);\n        m = (Math.round(dbm * 100) / 100).toFixed(2);\n      }\n      if (m !== \"N/A\") break;\n    }\n  }\n  if (m !== \"N/A\") break;\n}\n\nreturn {writable: false, value: [m, \"xsd:string\"]};"
+    },
+    {
+      "_id": "WanIP",
+      "script": "//ALIJAYA-NET WanIP\nlet result = '';\n\nif (\"value\" in args[1]) {\n    result = args[1].value[0];\n} else {\n    let keys = [\n        'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress',\n        'InternetGatewayDevice.WANDevice.*.WANConnectionDevice.1.WANPPPConnection.2.ExternalIPAddress',      \n        'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress',\n        'InternetGatewayDevice.WANDevice.*.WANConnectionDevice.1.WANIPConnection.2.ExternalIPAddress',\n        'Device.IP.Interface.1.IPv4Address.1.IPAddress'\n    ];\n\n    result = getParameterValue(keys);\n}\n\nlog(\"WanIP: \" + result);\nreturn {writable: false, value: [result, \"xsd:string\"]};\n\nfunction getParameterValue(keys) {\n    for (let key of keys) {\n        let d = declare(key, {path: Date.now() - (120 * 1000), value: Date.now()});\n\n        for (let item of d) {\n            if (item.value && item.value[0]) {\n                return item.value[0];\n            }\n        }\n    }\n\n    return '';\n}\n\n\n"
+    },
+    {
+      "_id": "WanMac",
+      "script": "// ALIJAYA-NET WanMac\nlet result = '';\n\nif (\"value\" in args[1]) {\n    result = args[1].value[0];\n} else {\n    let keys = [\n        'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.MACAddress',\n        'InternetGatewayDevice.WANDevice.*.WANConnectionDevice.1.WANPPPConnection.2.MACAddress',      \n        'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.MACAddress',\n        'InternetGatewayDevice.WANDevice.*.WANConnectionDevice.1.WANIPConnection.2.MACAddress',\n        'Device.IP.Interface.1.IPv4Address.1.IPAddress'\n    ];\n\n    result = getParameterValue(keys);\n}\n\nlog(\"WanMac: \" + result);\nreturn {writable: false, value: [result, \"xsd:string\"]};\n\nfunction getParameterValue(keys) {\n    for (let key of keys) {\n        let d = declare(key, {path: Date.now() - (120 * 1000), value: Date.now()});\n\n        for (let item of d) {\n            if (item.value && item.value[0]) {\n                return item.value[0];\n            }\n        }\n    }\n\n    return '';\n}\n\n\n"
+    },
+    {
+      "_id": "WanType",
+      "script": "// ALIJAYA-NET WanType\nlet result = '';\n\nif (\"value\" in args[1]) {\n    result = args[1].value[0];\n} else {\n    let keys = [\n        'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ConnectionType',\n        'InternetGatewayDevice.WANDevice.*.WANConnectionDevice.1.WANPPPConnection.1.TransportType',      \n        'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.AddressingType',\n        'InternetGatewayDevice.WANDevice.*.WANConnectionDevice.1.WANIPConnection.1.ConnectionType',\n    ];\n\n    result = getParameterValue(keys);\n}\n\nlog(\"WanType: \" + result);\nreturn {writable: false, value: [result, \"xsd:string\"]};\n\nfunction getParameterValue(keys) {\n    for (let key of keys) {\n        let d = declare(key, {path: Date.now() - (120 * 1000), value: Date.now()});\n\n        for (let item of d) {\n            if (item.value && item.value[0]) {\n                return item.value[0];\n            }\n        }\n    }\n\n    return '';\n}\n\n\n"
+    },
+    {
+      "_id": "WanPassword",
+      "script": "// ALIJAYA-NET tes wlan pw\nlet m = \"\";\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase\", null, {value: m});\n  declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase\", null, {value: m});\n}\nelse {\n  let v1 = declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase\", {value: Date.now()});\n  let v2 = declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase\", {value: Date.now()});\n\n\n  if (v1.size) {\n    m = v1.value[0];\n  }\n  else if (v2.size) {\n    m = v2.value[0];\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:string\"]};\n\n\n"
+    },
+    {
+      "_id": "getAssociation",
+      "script": "// ALIJAYA-NET\nlet m = 0;\nlet ppp = declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.TotalAssociations\", {value: Date.now()}); \nlet ppp2 = declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.3.TotalAssociations\", {value: Date.now()});\nlet ppp3 = declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.TotalAssociations\", {value: Date.now()});\n    \n\nif (ppp.size) { \n \n  for (let p of ppp) { \n \n    if (p.value[0]) { \n \n      m = p.value[0]; \n \n      break; \n \n    } \n \n  }   \n \n} else if (ppp2.size) { \n \n  for (let p of ppp2) { \n \n    if (p.value[0]) { \n \n      m = p.value[0]; \n \n      break; \n \n    } \n \n  }   \n \n}\nelse if (ppp3.size) { \n \n  for (let p of ppp3) { \n \n    if (p.value[0]) { \n \n      m = p.value[0]; \n \n      break; \n \n    } \n \n  }   \n \n}\n\nreturn {writable: false, value: [m, \"xsd:string\"]};\n\n\n\n"
+    },
+    {
+      "_id": "getdeviceuptime",
+      "script": "// ALIJAYA NET - Universal Device Uptime\nlet totalSecs = 0;\nlet paths = [\n  \"InternetGatewayDevice.DeviceInfo.UpTime\",\n  \"Device.DeviceInfo.UpTime\",\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Uptime\"\n];\n\nfor (let i = 0; i < paths.length; i++) {\n  let d = declare(paths[i], {value: 1});\n  for (let p of d) {\n    if (p.value && p.value[0] !== undefined) {\n      let s = parseInt(p.value[0], 10);\n      if (!isNaN(s) && s > 0) {\n        totalSecs = s;\n        break;\n      }\n    }\n  }\n  if (totalSecs > 0) break;\n}\n\nif (totalSecs <= 0) {\n  return {writable: false, value: [\"0d 00:00:00\", \"xsd:string\"]};\n}\n\nlet days = Math.floor(totalSecs / 86400);\nlet rem  = totalSecs % 86400;\nlet hrs  = Math.floor(rem / 3600);\nlet mins = Math.floor((rem % 3600) / 60);\nlet secs = rem % 60;\n\nlet pad = (n) => (n < 10 ? \"0\" + n : \"\" + n);\nlet uptime = days + \"d \" + pad(hrs) + \":\" + pad(mins) + \":\" + pad(secs);\n\nreturn {writable: false, value: [uptime, \"xsd:string\"]};"
+    },
+    {
+      "_id": "getSerialNumber",
+      "script": "// ALIJAYA NET - Universal Serial Number\nlet sn = \"\";\nlet hexToText = (hex) => {\n  let text = \"\";\n  for (let i = 0; i < hex.length; i += 2) {\n    let hexCode = hex.substr(i, 2);\n    let charCode = parseInt(hexCode, 16);\n    text += String.fromCharCode(charCode);\n  }\n  return text;\n};\n\nlet paths = [\n  \"DeviceID.SerialNumber\",\n  \"InternetGatewayDevice.DeviceInfo.SerialNumber\",\n  \"Device.DeviceInfo.SerialNumber\",\n  \"InternetGatewayDevice.DeviceInfo.X_HW_SerialNumber\",\n  \"InternetGatewayDevice.DeviceInfo.X_CU_SerialNumber\"\n];\n\nfor (let i = 0; i < paths.length; i++) {\n  let d = declare(paths[i], {value: 1});\n  for (let p of d) {\n    if (p.value && p.value[0]) {\n      let val = String(p.value[0]).trim();\n      if (val !== \"\") {\n        sn = val;\n        break;\n      }\n    }\n  }\n  if (sn !== \"\") break;\n}\n\nif (/^[0-9A-Fa-f]{12,}$/.test(sn) && !sn.includes(\"40ee15\")) {\n  let hexPart = sn.substr(0, 8);\n  let textPart = hexToText(hexPart);\n  sn = textPart + sn.substr(8);\n}\n\nreturn {writable: false, value: [sn, \"xsd:string\"]};"
+    },
+    {
+      "_id": "getaccesstype",
+      "script": "// ALIJAYA-NET\nlet m = \"\";\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(\"Device.DeviceInfo.AccessType\", null, {value: m});\n  declare(\"InternetGatewayDevice.DeviceInfo.AccessType\", null, {value: m});\n}\nelse {\n  let d = declare(\"Device.DeviceInfo.AccessType\", {value: Date.now()});\n  let igd = declare(\"InternetGatewayDevice.DeviceInfo.AccessType\", {value: Date.now()});\n\n  if (d.size) {\n    m = d.value[0];\n  }\n  else if (igd.size) {\n    m = igd.value[0];\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:string\"]};"
+    },
+    {
+      "_id": "getponmode",
+      "script": "// ALIJAYA NET - PON Mode\nlet pon = \"\";\nlet v1 = declare(\"InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.WANAccessType\", {value: 1});\nif (v1 && v1.size && v1.value && v1.value[0]) {\n  pon = String(v1.value[0]).toUpperCase();\n}\n\nif (!pon) {\n  let eponCheck = declare(\"InternetGatewayDevice.WANDevice.*.X_CT-COM_EponInterfaceConfig.RXPower\", {value: 1});\n  if (eponCheck && eponCheck.size) {\n    pon = \"EPON\";\n  } else {\n    let gponCheck = declare(\"InternetGatewayDevice.WANDevice.*.X_CT-COM_GponInterfaceConfig.RXPower\", {value: 1});\n    if (gponCheck && gponCheck.size) {\n      pon = \"GPON\";\n    }\n  }\n}\n\nif (pon.includes(\"EPON\")) {\n  pon = \"EPON\";\n} else if (pon.includes(\"GPON\") || pon.includes(\"PON\")) {\n  pon = \"GPON\";\n} else {\n  pon = \"Ethernet\";\n}\n\nreturn {writable: false, value: [pon, \"xsd:string\"]};"
+    },
+    {
+      "_id": "getpppuptime",
+      "script": "// ALIJAYA NET - Universal PPPoE Uptime\nlet totalSecs = 0;\nlet paths = [\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Uptime\",\n  \"InternetGatewayDevice.DeviceInfo.UpTime\",\n  \"Device.DeviceInfo.UpTime\"\n];\n\nfor (let i = 0; i < paths.length; i++) {\n  let d = declare(paths[i], {value: 1});\n  for (let p of d) {\n    if (p.value && p.value[0] !== undefined) {\n      let s = parseInt(p.value[0], 10);\n      if (!isNaN(s) && s > 0) {\n        totalSecs = s;\n        break;\n      }\n    }\n  }\n  if (totalSecs > 0) break;\n}\n\nif (totalSecs <= 0) {\n  return {writable: false, value: [\"0d 00:00:00\", \"xsd:string\"]};\n}\n\nlet days = Math.floor(totalSecs / 86400);\nlet rem  = totalSecs % 86400;\nlet hrs  = Math.floor(rem / 3600);\nlet mins = Math.floor((rem % 3600) / 60);\nlet secs = rem % 60;\n\nlet pad = (n) => (n < 10 ? \"0\" + n : \"\" + n);\nlet uptime = days + \"d \" + pad(hrs) + \":\" + pad(mins) + \":\" + pad(secs);\n\nreturn {writable: false, value: [uptime, \"xsd:string\"]};"
+    },
+    {
+      "_id": "gettemp",
+      "script": "// ALIJAYA NET - Temperature\nlet m = \"N/A\";\nlet paths = [\n  \"InternetGatewayDevice.WANDevice.*.X_ZTE-COM_WANPONInterfaceConfig.TransceiverTemperature\",\n  \"InternetGatewayDevice.WANDevice.*.X_CT-COM_EponInterfaceConfig.TransceiverTemperature\",\n  \"InternetGatewayDevice.WANDevice.*.X_CT-COM_GponInterfaceConfig.TransceiverTemperature\",\n  \"InternetGatewayDevice.WANDevice.*.X_GponInterafceConfig.TransceiverTemperature\",\n  \"InternetGatewayDevice.WANDevice.*.X_FH_GponInterfaceConfig.TransceiverTemperature\",\n  \"InternetGatewayDevice.WANDevice.*.X_CMCC_EponInterfaceConfig.TransceiverTemperature\",\n  \"InternetGatewayDevice.WANDevice.*.X_CMCC_GponInterfaceConfig.TransceiverTemperature\"\n];\n\nfor (let p of paths) {\n  let d = declare(p, {value: 1});\n  for (let item of d) {\n    if (item.value && item.value[0] !== undefined) {\n      let val = parseFloat(item.value[0]);\n      if (!isNaN(val)) {\n        if (val < 150 && val > 0) {\n          m = Math.round(val).toString();\n        } else if (val >= 150) {\n          let temp = val / 256;\n          if (temp > 100 || temp < 10) {\n            temp = (val * 0.0038) + 1.5;\n          }\n          m = Math.round(temp).toString();\n        }\n        if (m !== \"N/A\") break;\n      }\n    }\n  }\n  if (m !== \"N/A\") break;\n}\n\nreturn {writable: false, value: [m, \"xsd:string\"]};"
+    },
+    {
+      "_id": "pppoeIP",
+      "script": "// ALIJAYA NET - Universal PPPoE External IP\nlet ip = \"\";\nlet paths = [\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.ExternalIPAddress\",\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.ExternalIPAddress\",\n  \"Device.IP.Interface.*.IPv4Address.*.IPAddress\"\n];\n\nfor (let i = 0; i < paths.length; i++) {\n  let d = declare(paths[i], {value: 1});\n  for (let p of d) {\n    if (p.value && p.value[0] !== undefined && p.value[0] !== null) {\n      let val = String(p.value[0]).trim();\n      if (val !== \"\" && val !== \"0.0.0.0\") {\n        ip = val;\n        break;\n      }\n    }\n  }\n  if (ip !== \"\") break;\n}\n\nreturn {writable: false, value: [ip, \"xsd:string\"]};"
+    },
+    {
+      "_id": "pppoePassword",
+      "script": "// ALIJAYA-NET PPPoE Password\nlet pw = \"\";\nif (args[1].value) {\n  pw = args[1].value[0];\n  declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Password\", null, {value: pw});\n}\nelse {\n  let v1 = declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Password\", {value: Date.now()});\n\n  if (v1.size) {\n    pw = v1.value[0];\n  }\n}\n\nreturn {writable: true, value: [pw, \"xsd:string\"]};"
+    },
+    {
+      "_id": "pppoeUsername",
+      "script": "// ALIJAYA NET - Universal 2-Way Writable PPPoE Username\nlet username = \"N/A\";\nconst now = Date.now();\n\nif (args[1] && args[1].value) {\n  username = String(args[1].value[0]).trim();\n  declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Username\", null, {value: username});\n} else {\n  let paths = [\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Username\",\n    \"Device.PPP.Interface.*.Username\"\n  ];\n  for (let i = 0; i < paths.length; i++) {\n    let d = declare(paths[i], {value: now - 300000});\n    for (let p of d) {\n      if (p.value && p.value[0] !== undefined && p.value[0] !== null && p.value[0] !== \"\") {\n        let val = String(p.value[0]).trim();\n        if (val !== \"\") {\n          username = val;\n          break;\n        }\n      }\n    }\n    if (username !== \"N/A\") break;\n  }\n}\n\nreturn {writable: true, value: [username, \"xsd:string\"]};\n"
+    },
+    {
+      "_id": "pppoeUsername2",
+      "script": "// ALIJAYA NET - Universal PPPoE Username (UI index)\nlet username = \"N/A\";\nlet paths = [\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Username\",\n  \"Device.PPP.Interface.*.Username\"\n];\n\nfor (let i = 0; i < paths.length; i++) {\n  let d = declare(paths[i], {value: 1});\n  for (let p of d) {\n    if (p.value && p.value[0] !== undefined && p.value[0] !== null && p.value[0] !== \"\") {\n      let val = String(p.value[0]).trim();\n      if (val !== \"\") {\n        username = val;\n        break;\n      }\n    }\n  }\n  if (username !== \"N/A\") break;\n}\n\nreturn {writable: false, value: [username, \"xsd:string\"]};"
+    },
+    {
+      "_id": "superAdmin",
+      "script": "// ALIJAYA-NET virtual parameter superadmin username\nlet m = \"\";\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(\"InternetGatewayDevice.X_CU_Function.Web.AdminName\", null, {value: m});\n  declare(\"InternetGatewayDevice.UserInterface.X_ZTE-COM_WebUserInfo.AdminName\", null, {value: m});\n  declare(\"InternetGatewayDevice.UserInterface.X_HW_WebUserInfo.2.UserName\", null, {value: m});\n  declare(\"InternetGatewayDevice.DeviceInfo.X_CMCC_TeleComAccount.Username\", null, {value: m});\n  declare(\"InternetGatewayDevice.DeviceInfo.X_CT-COM_TeleComAccount.Username\", null, {value: m});\n  declare(\"InternetGatewayDevice.DeviceInfo.X_FH_Account.X_FH_WebUserInfo.WebSuperUsername\", null, {value: m});\n  declare(\"InternetGatewayDevice.User.1.Username\", null, {value: m});\n}\nelse {\n  let v1 = declare(\"InternetGatewayDevice.X_CU_Function.Web.AdminName\", {value: 1});\n  let v2 = declare(\"InternetGatewayDevice.UserInterface.X_ZTE-COM_WebUserInfo.AdminName\", {value: 1});\n  let v3 = declare(\"InternetGatewayDevice.UserInterface.X_HW_WebUserInfo.2.UserName\", {value: 1});\n  let v4 = declare(\"InternetGatewayDevice.DeviceInfo.X_CMCC_TeleComAccount.Username\", {value: 1});\n  let v5 = declare(\"InternetGatewayDevice.DeviceInfo.X_CT-COM_TeleComAccount.Username\", {value: 1});\n  let v6 = declare(\"InternetGatewayDevice.DeviceInfo.X_FH_Account.X_FH_WebUserInfo.WebSuperUsername\", {value: 1});\n  let v7 = declare(\"InternetGatewayDevice.User.1.Username\", {value: 1});\n\n  if (v1.size && v1.value[0]) { m = v1.value[0]; }\n  else if (v2.size && v2.value[0]) { m = v2.value[0]; }\n  else if (v3.size && v3.value[0]) { m = v3.value[0]; }\n  else if (v4.size && v4.value[0]) { m = v4.value[0]; }\n  else if (v5.size && v5.value[0]) { m = v5.value[0]; }\n  else if (v6.size && v6.value[0]) { m = v6.value[0]; }\n  else if (v7.size && v7.value[0]) { m = v7.value[0]; }\n\n  if (!m) {\n    m = \"admin\";\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:string\"]};\n"
+    },
+    {
+      "_id": "superPassword",
+      "script": "// ALIJAYA-NET virtual parameter superadmin password\nlet m = \"\";\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(\"InternetGatewayDevice.X_CU_Function.Web.AdminPassword\", null, {value: m});\n  declare(\"InternetGatewayDevice.UserInterface.X_ZTE-COM_WebUserInfo.AdminPassword\", null, {value: m});\n  declare(\"InternetGatewayDevice.UserInterface.X_HW_WebUserInfo.2.Password\", null, {value: m});\n  declare(\"InternetGatewayDevice.DeviceInfo.X_CMCC_TeleComAccount.Password\", null, {value: m});\n  declare(\"InternetGatewayDevice.DeviceInfo.X_CT-COM_TeleComAccount.Password\", null, {value: m});\n  declare(\"InternetGatewayDevice.DeviceInfo.X_FH_Account.X_FH_WebUserInfo.WebSuperPassword\", null, {value: m});\n  declare(\"InternetGatewayDevice.User.1.Password\", null, {value: m});\n  declare(\"InternetGatewayDevice.UserInterface.Password\", null, {value: m});\n}\nelse {\n  let v1 = declare(\"InternetGatewayDevice.X_CU_Function.Web.AdminPassword\", {value: 1});\n  let v2 = declare(\"InternetGatewayDevice.UserInterface.X_ZTE-COM_WebUserInfo.AdminPassword\", {value: 1});\n  let v3 = declare(\"InternetGatewayDevice.UserInterface.X_HW_WebUserInfo.2.Password\", {value: 1});\n  let v4 = declare(\"InternetGatewayDevice.DeviceInfo.X_CMCC_TeleComAccount.Password\", {value: 1});\n  let v5 = declare(\"InternetGatewayDevice.DeviceInfo.X_CT-COM_TeleComAccount.Password\", {value: 1});\n  let v6 = declare(\"InternetGatewayDevice.DeviceInfo.X_FH_Account.X_FH_WebUserInfo.WebSuperPassword\", {value: 1});\n  let v7 = declare(\"InternetGatewayDevice.User.1.Password\", {value: 1});\n  let v8 = declare(\"InternetGatewayDevice.UserInterface.Password\", {value: 1});\n\n  if (v1.size && v1.value[0]) { m = v1.value[0]; }\n  else if (v2.size && v2.value[0]) { m = v2.value[0]; }\n  else if (v3.size && v3.value[0]) { m = v3.value[0]; }\n  else if (v4.size && v4.value[0]) { m = v4.value[0]; }\n  else if (v5.size && v5.value[0]) { m = v5.value[0]; }\n  else if (v6.size && v6.value[0]) { m = v6.value[0]; }\n  else if (v7.size && v7.value[0]) { m = v7.value[0]; }\n  else if (v8.size && v8.value[0]) { m = v8.value[0]; }\n\n  if (!m) {\n    m = \"admin\";\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:string\"]};\n"
+    },
+    {
+      "_id": "userAdmin",
+      "script": "// ALIJAYA-NET virtual parameter user admin\nlet m = \"\";\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(\"InternetGatewayDevice.X_CU_Function.Web.UserName\", null, {value: m});\n  declare(\"InternetGatewayDevice.UserInterface.X_ZTE-COM_WebUserInfo.UserName\", null, {value: m});\n  declare(\"InternetGatewayDevice.UserInterface.X_HW_WebUserInfo.1.UserName\", null, {value: m});\n  declare(\"InternetGatewayDevice.DeviceInfo.X_FH_Account.X_FH_WebUserInfo.WebUsername\", null, {value: m});\n  declare(\"InternetGatewayDevice.X_CT-COM_UserInfo.UserName\", null, {value: m});\n  declare(\"InternetGatewayDevice.User.2.Username\", null, {value: m});\n}\nelse {\n  let v1 = declare(\"InternetGatewayDevice.X_CU_Function.Web.UserName\", {value: 1});\n  let v2 = declare(\"InternetGatewayDevice.UserInterface.X_ZTE-COM_WebUserInfo.UserName\", {value: 1});\n  let v3 = declare(\"InternetGatewayDevice.UserInterface.X_HW_WebUserInfo.1.UserName\", {value: 1});\n  let v4 = declare(\"InternetGatewayDevice.DeviceInfo.X_FH_Account.X_FH_WebUserInfo.WebUsername\", {value: 1});\n  let v5 = declare(\"InternetGatewayDevice.X_CT-COM_UserInfo.UserName\", {value: 1});\n  let v6 = declare(\"InternetGatewayDevice.User.2.Username\", {value: 1});\n\n  if (v1.size && v1.value[0]) { m = v1.value[0]; }\n  else if (v2.size && v2.value[0]) { m = v2.value[0]; }\n  else if (v3.size && v3.value[0]) { m = v3.value[0]; }\n  else if (v4.size && v4.value[0]) { m = v4.value[0]; }\n  else if (v5.size && v5.value[0]) { m = v5.value[0]; }\n  else if (v6.size && v6.value[0]) { m = v6.value[0]; }\n\n  if (!m) {\n    m = \"user\";\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:string\"]};\n"
+    },
+    {
+      "_id": "userPassword",
+      "script": "// virtual parameter user password\nlet m = \"\";\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(\"InternetGatewayDevice.X_CU_Function.Web.UserPassword\", null, {value: m});\n  declare(\"InternetGatewayDevice.UserInterface.X_ZTE-COM_WebUserInfo.UserPassword\", null, {value: m});\n  declare(\"InternetGatewayDevice.UserInterface.X_HW_WebUserInfo.1.Password\", null, {value: m});\n  declare(\"InternetGatewayDevice.DeviceInfo.X_FH_Account.X_FH_WebUserInfo.WebPassword\", null, {value: m});\n  declare(\"InternetGatewayDevice.User.2.Password\", null, {value: m});\n}\nelse {\n  let v1 = declare(\"InternetGatewayDevice.X_CU_Function.Web.UserPassword\", {value: 1});\n  let v2 = declare(\"InternetGatewayDevice.UserInterface.X_ZTE-COM_WebUserInfo.UserPassword\", {value: 1});\n  let v3 = declare(\"InternetGatewayDevice.UserInterface.X_HW_WebUserInfo.1.Password\", {value: 1});\n  let v4 = declare(\"InternetGatewayDevice.DeviceInfo.X_FH_Account.X_FH_WebUserInfo.WebPassword\", {value: 1});\n  let v5 = declare(\"InternetGatewayDevice.User.2.Password\", {value: 1});\n\n  if (v1.size && v1.value[0]) { m = v1.value[0]; }\n  else if (v2.size && v2.value[0]) { m = v2.value[0]; }\n  else if (v3.size && v3.value[0]) { m = v3.value[0]; }\n  else if (v4.size && v4.value[0]) { m = v4.value[0]; }\n  else if (v5.size && v5.value[0]) { m = v5.value[0]; }\n\n  if (!m) {\n    m = \"user1234\";\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:string\"]};\n"
+    },
+    {
+      "_id": "pppoeMac",
+      "script": "// ALIJAYA NET - Universal MAC Address\nlet mac = \"\";\nlet paths = [\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.MACAddress\",\n  \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.MACAddress\",\n  \"InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MACAddress\",\n  \"InternetGatewayDevice.DeviceInfo.X_CU_SerialNumber\",\n  \"Device.PPP.Interface.*.MACAddress\"\n];\n\nfor (let i = 0; i < paths.length; i++) {\n  let d = declare(paths[i], {value: 1});\n  for (let p of d) {\n    if (p.value && p.value[0] && typeof p.value[0] === 'string') {\n      let val = p.value[0].trim();\n      if (val !== \"\" && val !== \"00:00:00:00:00:00\" && val.includes(\":\")) {\n        mac = val;\n        break;\n      }\n    }\n  }\n  if (mac !== \"\") break;\n}\n\nreturn {writable: false, value: [mac || \"Ethernet\", \"xsd:string\"]};"
+    },
+    {
+      "_id": "WlanSSID",
+      "script": "// ALIJAYA NET - Universal WiFi SSID\nif (args[1].value) {\n  let val = args[1].value[0];\n  declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID\", null, {value: val});\n  declare(\"InternetGatewayDevice.LANDevice.*.WLANConfiguration.1.SSID\", null, {value: val});\n  return {writable: true, value: [val, \"xsd:string\"]};\n}\n\nlet ssid = \"\";\nlet paths = [\n  \"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID\",\n  \"InternetGatewayDevice.LANDevice.*.WLANConfiguration.1.SSID\",\n  \"Device.WiFi.SSID.1.SSID\"\n];\n\nfor (let p of paths) {\n  let d = declare(p, {value: 1});\n  for (let item of d) {\n    if (item.value && item.value[0] && typeof item.value[0] === 'string') {\n      let val = item.value[0];\n      if (val !== \"\") {\n        ssid = val;\n        break;\n      }\n    }\n  }\n  if (ssid !== \"\") break;\n}\n\nreturn {writable: true, value: [ssid, \"xsd:string\"]};"
+    },
+    {
+      "_id": "VlanID",
+      "script": "// ALIJAYA NET - Universal 2-Way Writable VLAN ID\nlet vlan = \"\";\nconst now = Date.now();\n\n// 1. Write mode: User edits VLAN in GenieACS Web UI\nif (args[1] && args[1].value) {\n  vlan = String(args[1].value[0]).trim();\n  const brandDecl = declare(\"DeviceID.Manufacturer\", {value: 1});\n  const brand = (brandDecl && brandDecl.value && brandDecl.value[0]) ? String(brandDecl.value[0]).toUpperCase() : \"\";\n\n  if (brand.includes(\"HUAWEI\")) {\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_HW_VLAN\", null, {value: vlan});\n  } else if (brand.includes(\"ZTE\") || brand.includes(\"ZICG\")) {\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CMCC_VLANIDMark\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CMCC_VLANMode\", null, {value: 1});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_ZTE-COM_VlanID\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.VLANID\", null, {value: vlan});\n  } else if (brand.includes(\"CIOT\") || brand.includes(\"FIBERHOME\") || brand.includes(\"RTEG\")) {\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CT-COM_VlanID\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CT-COM_Mode\", null, {value: 1});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.VLANID\", null, {value: vlan});\n  } else {\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.VLANID\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.VLANID\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CT-COM_VlanID\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CMCC_VLANIDMark\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_HW_VLAN\", null, {value: vlan});\n  }\n}\n// 2. Read mode\nelse {\n  const paths = [\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_HW_VLAN\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CT-COM_VlanID\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CMCC_VLANIDMark\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_ZTE-COM_VlanID\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.VLANID\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_BROADCOM_COM_VLANID\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANEponInterfaceConfig.VLANID\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.X_CT-COM_WANGponLinkConfig.VLANIDMark\"\n  ];\n\n  for (let i = 0; i < paths.length; i++) {\n    const d = declare(paths[i], {value: now - 300000});\n    for (let p of d) {\n      if (p.value && p.value[0] !== undefined && p.value[0] !== null && p.value[0] !== \"\") {\n        const val = String(p.value[0]).trim();\n        if (val !== \"\" && val !== \"0\" && val !== \"undefined\" && val !== \"null\") {\n          vlan = val;\n          break;\n        }\n      }\n    }\n    if (vlan !== \"\") break;\n  }\n}\n\nreturn {writable: true, value: [vlan || \"-\", \"xsd:string\"]};\n"
+    },
+    {
+      "_id": "vlan",
+      "script": "// ALIJAYA NET - Universal 2-Way Writable VLAN ID\nlet vlan = \"\";\nconst now = Date.now();\n\n// 1. Write mode: User edits VLAN in GenieACS Web UI\nif (args[1] && args[1].value) {\n  vlan = String(args[1].value[0]).trim();\n  const brandDecl = declare(\"DeviceID.Manufacturer\", {value: 1});\n  const brand = (brandDecl && brandDecl.value && brandDecl.value[0]) ? String(brandDecl.value[0]).toUpperCase() : \"\";\n\n  if (brand.includes(\"HUAWEI\")) {\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_HW_VLAN\", null, {value: vlan});\n  } else if (brand.includes(\"ZTE\") || brand.includes(\"ZICG\")) {\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CMCC_VLANIDMark\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CMCC_VLANMode\", null, {value: 1});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_ZTE-COM_VlanID\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.VLANID\", null, {value: vlan});\n  } else if (brand.includes(\"CIOT\") || brand.includes(\"FIBERHOME\") || brand.includes(\"RTEG\")) {\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CT-COM_VlanID\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CT-COM_Mode\", null, {value: 1});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.VLANID\", null, {value: vlan});\n  } else {\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.VLANID\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.VLANID\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CT-COM_VlanID\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CMCC_VLANIDMark\", null, {value: vlan});\n    declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_HW_VLAN\", null, {value: vlan});\n  }\n}\n// 2. Read mode\nelse {\n  const paths = [\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_HW_VLAN\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CT-COM_VlanID\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CMCC_VLANIDMark\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_ZTE-COM_VlanID\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.VLANID\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_BROADCOM_COM_VLANID\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANEponInterfaceConfig.VLANID\",\n    \"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.X_CT-COM_WANGponLinkConfig.VLANIDMark\"\n  ];\n\n  for (let i = 0; i < paths.length; i++) {\n    const d = declare(paths[i], {value: now - 300000});\n    for (let p of d) {\n      if (p.value && p.value[0] !== undefined && p.value[0] !== null && p.value[0] !== \"\") {\n        const val = String(p.value[0]).trim();\n        if (val !== \"\" && val !== \"0\" && val !== \"undefined\" && val !== \"null\") {\n          vlan = val;\n          break;\n        }\n      }\n    }\n    if (vlan !== \"\") break;\n  }\n}\n\nreturn {writable: true, value: [vlan || \"-\", \"xsd:string\"]};\n"
+    }
+  ],
+  "presets": [
+    {
+      "_id": "bootstrap",
+      "weight": 0,
+      "channel": "bootstrap",
+      "events": {
+        "0 BOOTSTRAP": true
+      },
+      "precondition": "",
+      "configurations": [
+        {
+          "type": "provision",
+          "name": "bootstrap",
+          "args": null
+        }
+      ]
+    },
+    {
+      "_id": "default",
+      "weight": 0,
+      "channel": "default",
+      "precondition": "",
+      "events": {},
+      "configurations": [
+        {
+          "type": "provision",
+          "name": "default",
+          "args": null
+        }
+      ]
+    },
+    {
+      "_id": "inform",
+      "weight": 0,
+      "channel": "inform",
+      "precondition": "",
+      "events": {},
+      "configurations": [
+        {
+          "type": "provision",
+          "name": "inform",
+          "args": null
+        }
+      ]
+    }
+  ],
+  "provisions": [
+    {
+      "_id": "bootstrap",
+      "script": "const now = Date.now();\n\n// Clear cached data model to force a refresh\nclear(\"Device\", now);\nclear(\"InternetGatewayDevice\", now);"
+    },
+    {
+      "_id": "default",
+      "script": "// ALIJAYA NET - Bulletproof & Lean Default Provision\nconst now = Date.now();\nconst daily = now - 86400000; \nconst update = now - 120000; // 2 minutes (auto-refresh on inform)\n\n// 1. Safe Brand Detection\nconst merkDecl = declare(\"DeviceID.Manufacturer\", {value: 1});\nconst merk = (merkDecl && merkDecl.value && merkDecl.value[0]) ? String(merkDecl.value[0]) : \"\";\n\n// 2. Basic Info & Uptime\ndeclare(\"DeviceID.ProductClass\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.DeviceInfo.HardwareVersion\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.DeviceInfo.SoftwareVersion\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.DeviceInfo.UpTime\", {path: update, value: update});\ndeclare(\"InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.WANAccessType\", {path: daily, value: daily});\n\n// 3. Optical Power & Temp (Safe paths by manufacturer)\nif (merk.includes(\"ZTE\") || merk.includes(\"ZICG\")) {\n  declare(\"InternetGatewayDevice.WANDevice.*.X_ZTE-COM_WANPONInterfaceConfig.RXPower\", {path: update, value: update});\n  declare(\"InternetGatewayDevice.WANDevice.*.X_ZTE-COM_WANPONInterfaceConfig.TransceiverTemperature\", {path: update, value: update});\n} else if (merk.includes(\"Huawei\")) {\n  declare(\"InternetGatewayDevice.WANDevice.*.X_GponInterafceConfig.RXPower\", {path: update, value: update});\n  declare(\"InternetGatewayDevice.WANDevice.*.X_GponInterafceConfig.TransceiverTemperature\", {path: update, value: update});\n} else {\n  // CIOT / GM220-S / M63X / CT-COM\n  declare(\"InternetGatewayDevice.WANDevice.*.X_CT-COM_EponInterfaceConfig.RXPower\", {path: update, value: update});\n  declare(\"InternetGatewayDevice.WANDevice.*.X_CT-COM_EponInterfaceConfig.TransceiverTemperature\", {path: update, value: update});\n  declare(\"InternetGatewayDevice.WANDevice.*.X_CT-COM_GponInterfaceConfig.RXPower\", {path: update, value: update});\n  declare(\"InternetGatewayDevice.WANDevice.*.X_CT-COM_GponInterfaceConfig.TransceiverTemperature\", {path: update, value: update});\n}\n\n// 4. WAN Connection (Essential Status & IP refresh on inform; config parameters cached daily)\ndeclare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Enable\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Name\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.ConnectionType\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Username\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.ExternalIPAddress\", {path: update, value: update});\ndeclare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Uptime\", {path: update, value: update});\ndeclare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.NATEnabled\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.ConnectionStatus\", {path: update, value: update});\ndeclare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Password\", {path: daily, value: daily});\n\n// Brand-aware VLAN & ServiceList\nif (merk.includes(\"Huawei\")) {\n  declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_HW_VLAN\", {path: daily, value: daily});\n  declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_HW_SERVICELIST\", {path: daily, value: daily});\n} else if (merk.includes(\"ZTE\") || merk.includes(\"ZICG\")) {\n  declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_ZTE-COM_VlanID\", {path: daily, value: daily});\n  declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.VLANID\", {path: daily, value: daily});\n} else {\n  // CIOT / CT-COM / Standard\n  declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_CT-COM_VlanID\", {path: daily, value: daily});\n  declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.VLANID\", {path: daily, value: daily});\n  declare(\"InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.X_CT-COM_ServiceList\", {path: daily, value: daily});\n}\n\n// 5. WLAN (WiFi) Configuration\ndeclare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.*\", {path: daily});\ndeclare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID\", {path: update, value: update});\ndeclare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.*.BeaconType\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.*.Enable\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.*.Channel\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TotalAssociations\", {path: update, value: update});\n\nif (merk.includes(\"ZTE\") || merk.includes(\"ZICG\") || merk.includes(\"Huawei\")) {\n  declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase\", {path: daily, value: daily});\n} else {\n  declare(\"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase\", {path: daily, value: daily});\n}\n\n// 6. LAN Management & Gateway Config\ndeclare(\"InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPRouters\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPServerEnable\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MinAddress\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MaxAddress\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DNSServers\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress\", {path: daily, value: daily});\ndeclare(\"InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask\", {path: daily, value: daily});\n\n// 7. Ethernet Physical Ports (Safe object path)\ndeclare(\"InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.*\", {path: daily});\n"
+    },
+    {
+      "_id": "inform",
+      "script": "// ALIJAYA NET - Provision Inform\nconst AcsUser = \"admin\";\nconst AcsPass = \"admin\";\nconst ConnReqUser = \"admin\";\nconst ConnReqPass = \"admin\";\nconst informInterval = 200;\n\nconst now = Date.now();\nconst daily = now - 86400000;\nconst hourly = now - 3600000;\n\nconst brandDecl = declare(\"DeviceID.Manufacturer\", {value: daily});\nconst brand = (brandDecl && brandDecl.value && brandDecl.value[0]) ? String(brandDecl.value[0]) : \"\";\n\nif (brand !== \"MikroTik\") {\n  declare(\"InternetGatewayDevice.ManagementServer.Username\", {value: daily}, {value: AcsUser});\n  declare(\"InternetGatewayDevice.ManagementServer.Password\", {value: daily}, {value: AcsPass});\n  declare(\"InternetGatewayDevice.ManagementServer.ConnectionRequestUsername\", {value: daily}, {value: ConnReqUser});\n  declare(\"InternetGatewayDevice.ManagementServer.ConnectionRequestPassword\", {value: daily}, {value: ConnReqPass});\n  declare(\"InternetGatewayDevice.ManagementServer.PeriodicInformEnable\", {value: daily}, {value: true});\n  declare(\"InternetGatewayDevice.ManagementServer.PeriodicInformInterval\", {value: daily}, {value: informInterval});\n} else {\n  declare(\"Device.ManagementServer.Username\", {value: daily}, {value: AcsUser});\n  declare(\"Device.ManagementServer.Password\", {value: daily}, {value: AcsPass});\n  declare(\"Device.ManagementServer.ConnectionRequestUsername\", {value: daily}, {value: ConnReqUser});\n  declare(\"Device.ManagementServer.ConnectionRequestPassword\", {value: daily}, {value: ConnReqPass});\n  declare(\"Device.ManagementServer.PeriodicInformEnable\", {value: daily}, {value: true});\n  declare(\"Device.ManagementServer.PeriodicInformInterval\", {value: daily}, {value: informInterval});\n}\n"
+    }
+  ],
+  "configs": [
+    {
+      "_id": "ui.device.0.type",
+      "value": "'tags'"
+    },
+    {
+      "_id": "ui.device.1.type",
+      "value": "'ping'"
+    },
+    {
+      "_id": "ui.device.10.type",
+      "value": "'device-actions'"
+    },
+    {
+      "_id": "ui.device.2.parameters.0.components.0.chart",
+      "value": "'online'"
+    },
+    {
+      "_id": "ui.device.2.parameters.0.components.0.type",
+      "value": "'overview-dot'"
+    },
+    {
+      "_id": "ui.device.2.parameters.0.components.1.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.device.2.parameters.0.components.2.parameters.0",
+      "value": "InternetGatewayDevice.DeviceInfo.HardwareVersion"
+    },
+    {
+      "_id": "ui.device.2.parameters.0.components.2.parameters.1",
+      "value": "InternetGatewayDevice.DeviceInfo.SoftwareVersion"
+    },
+    {
+      "_id": "ui.device.2.parameters.0.components.2.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.device.2.parameters.0.element",
+      "value": "'span.inform'"
+    },
+    {
+      "_id": "ui.device.2.parameters.0.label",
+      "value": "'LAST INFORM'"
+    },
+    {
+      "_id": "ui.device.2.parameters.0.parameter",
+      "value": "DATE_STRING(Events.Inform)"
+    },
+    {
+      "_id": "ui.device.2.parameters.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.device.2.parameters.1.label",
+      "value": "'REGISTERED'"
+    },
+    {
+      "_id": "ui.device.2.parameters.1.parameter",
+      "value": "Events.Registered"
+    },
+    {
+      "_id": "ui.device.2.parameters.10.label",
+      "value": "'MAC ADDRESS'"
+    },
+    {
+      "_id": "ui.device.2.parameters.10.parameter",
+      "value": "VirtualParameters.MacAddress"
+    },
+    {
+      "_id": "ui.device.2.parameters.11.label",
+      "value": "'REDAMAN'"
+    },
+    {
+      "_id": "ui.device.2.parameters.11.parameter",
+      "value": "VirtualParameters.RXPower || ' dBm'"
+    },
+    {
+      "_id": "ui.device.2.parameters.12.label",
+      "value": "'SUHU'"
+    },
+    {
+      "_id": "ui.device.2.parameters.12.parameter",
+      "value": "VirtualParameters.gettemp || ' C'"
+    },
+    {
+      "_id": "ui.device.2.parameters.13.label",
+      "value": "'MAC ADDRESS'"
+    },
+    {
+      "_id": "ui.device.2.parameters.13.parameter",
+      "value": "VirtualParameters.MacAddress"
+    },
+    {
+      "_id": "ui.device.2.parameters.14.label",
+      "value": "'PPPOE IP'"
+    },
+    {
+      "_id": "ui.device.2.parameters.14.parameter",
+      "value": "VirtualParameters.pppoeIP"
+    },
+    {
+      "_id": "ui.device.2.parameters.15.label",
+      "value": "'PPPOE USERNAME'"
+    },
+    {
+      "_id": "ui.device.2.parameters.15.parameter",
+      "value": "VirtualParameters.pppoeUsername"
+    },
+    {
+      "_id": "ui.device.2.parameters.16.label",
+      "value": "'PPPOE PASSWORD'"
+    },
+    {
+      "_id": "ui.device.2.parameters.16.parameter",
+      "value": "VirtualParameters.pppoePassword"
+    },
+    {
+      "_id": "ui.device.2.parameters.17.label",
+      "value": "'ROUTER IP'"
+    },
+    {
+      "_id": "ui.device.2.parameters.17.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPRouters"
+    },
+    {
+      "_id": "ui.device.2.parameters.18.label",
+      "value": "'WIFI SSID'"
+    },
+    {
+      "_id": "ui.device.2.parameters.18.parameter",
+      "value": "VirtualParameters.WlanSSID"
+    },
+    {
+      "_id": "ui.device.2.parameters.19.label",
+      "value": "'WIFI PASSWORD'"
+    },
+    {
+      "_id": "ui.device.2.parameters.19.parameter",
+      "value": "VirtualParameters.WlanPassword"
+    },
+    {
+      "_id": "ui.device.2.parameters.2.label",
+      "value": "'SERIAL NUMBER'"
+    },
+    {
+      "_id": "ui.device.2.parameters.2.parameter",
+      "value": "DeviceID.SerialNumber"
+    },
+    {
+      "_id": "ui.device.2.parameters.20.label",
+      "value": "'USER AKTIF'"
+    },
+    {
+      "_id": "ui.device.2.parameters.20.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TotalAssociations"
+    },
+    {
+      "_id": "ui.device.2.parameters.21.label",
+      "value": "'HOTSPOT'"
+    },
+    {
+      "_id": "ui.device.2.parameters.21.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.SSID"
+    },
+    {
+      "_id": "ui.device.2.parameters.22.label",
+      "value": "'HOTSPOT AKTIF'"
+    },
+    {
+      "_id": "ui.device.2.parameters.22.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.TotalAssociations"
+    },
+    {
+      "_id": "ui.device.2.parameters.23.label",
+      "value": "'ACS User'"
+    },
+    {
+      "_id": "ui.device.2.parameters.23.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.Username"
+    },
+    {
+      "_id": "ui.device.2.parameters.24.label",
+      "value": "'ACS Pass'"
+    },
+    {
+      "_id": "ui.device.2.parameters.24.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.Password"
+    },
+    {
+      "_id": "ui.device.2.parameters.25.label",
+      "value": "'ACS URL'"
+    },
+    {
+      "_id": "ui.device.2.parameters.25.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.URL"
+    },
+    {
+      "_id": "ui.device.2.parameters.3.label",
+      "value": "'PRODUCT CLASS'"
+    },
+    {
+      "_id": "ui.device.2.parameters.3.parameter",
+      "value": "DeviceID.ProductClass"
+    },
+    {
+      "_id": "ui.device.2.parameters.4.label",
+      "value": "'OUI'"
+    },
+    {
+      "_id": "ui.device.2.parameters.4.parameter",
+      "value": "DeviceID.OUI"
+    },
+    {
+      "_id": "ui.device.2.parameters.5.label",
+      "value": "'MANUFACTURER'"
+    },
+    {
+      "_id": "ui.device.2.parameters.5.parameter",
+      "value": "DeviceID.Manufacturer"
+    },
+    {
+      "_id": "ui.device.2.parameters.6.label",
+      "value": "'HARDWARE VERSION'"
+    },
+    {
+      "_id": "ui.device.2.parameters.6.parameter",
+      "value": "InternetGatewayDevice.DeviceInfo.HardwareVersion"
+    },
+    {
+      "_id": "ui.device.2.parameters.7.label",
+      "value": "'SOFTWARE VERSION'"
+    },
+    {
+      "_id": "ui.device.2.parameters.7.parameter",
+      "value": "InternetGatewayDevice.DeviceInfo.SoftwareVersion"
+    },
+    {
+      "_id": "ui.device.2.parameters.8.label",
+      "value": "'UPTIME'"
+    },
+    {
+      "_id": "ui.device.2.parameters.8.parameter",
+      "value": "VirtualParameters.getpppuptime"
+    },
+    {
+      "_id": "ui.device.2.parameters.9.label",
+      "value": "'PON'"
+    },
+    {
+      "_id": "ui.device.2.parameters.9.parameter",
+      "value": "InternetGatewayDevice.WANDevice.1.WANCommonInterfaceConfig.WANAccessType"
+    },
+    {
+      "_id": "ui.device.2.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.device.3.parameters.0.components.0.parameters.0",
+      "value": "InternetGatewayDevice.LANDevice.*.WLANConfiguration"
+    },
+    {
+      "_id": "ui.device.3.parameters.0.components.0.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.device.3.parameters.0.element",
+      "value": "'span.inform'"
+    },
+    {
+      "_id": "ui.device.3.parameters.0.label",
+      "value": "'[WLAN CONNECTION]'"
+    },
+    {
+      "_id": "ui.device.3.parameters.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.device.3.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.device.4.childParameters.0.label",
+      "value": "'Enable'"
+    },
+    {
+      "_id": "ui.device.4.childParameters.0.parameter",
+      "value": "Enable"
+    },
+    {
+      "_id": "ui.device.4.childParameters.1.label",
+      "value": "'BAND'"
+    },
+    {
+      "_id": "ui.device.4.childParameters.1.parameter",
+      "value": "X_CMCC_RFBand"
+    },
+    {
+      "_id": "ui.device.4.childParameters.2.label",
+      "value": "'SSID'"
+    },
+    {
+      "_id": "ui.device.4.childParameters.2.parameter",
+      "value": "SSID"
+    },
+    {
+      "_id": "ui.device.4.childParameters.3.label",
+      "value": "'WLAN passphrase'"
+    },
+    {
+      "_id": "ui.device.4.childParameters.3.parameter",
+      "value": "KeyPassphrase"
+    },
+    {
+      "_id": "ui.device.4.childParameters.4.label",
+      "value": "'Security'"
+    },
+    {
+      "_id": "ui.device.4.childParameters.4.parameter",
+      "value": "BeaconType"
+    },
+    {
+      "_id": "ui.device.4.childParameters.5.label",
+      "value": "'BSSID'"
+    },
+    {
+      "_id": "ui.device.4.childParameters.5.parameter",
+      "value": "BSSID"
+    },
+    {
+      "_id": "ui.device.4.childParameters.6.label",
+      "value": "'Channel'"
+    },
+    {
+      "_id": "ui.device.4.childParameters.6.parameter",
+      "value": "Channel"
+    },
+    {
+      "_id": "ui.device.4.childParameters.7.label",
+      "value": "'Connected Device'"
+    },
+    {
+      "_id": "ui.device.4.childParameters.7.parameter",
+      "value": "TotalAssociations"
+    },
+    {
+      "_id": "ui.device.4.childParameters.8.label",
+      "value": "'Auto'"
+    },
+    {
+      "_id": "ui.device.4.childParameters.8.parameter",
+      "value": "AutoChannelEnable"
+    },
+    {
+      "_id": "ui.device.4.childParameters.9.label",
+      "value": "'Power'"
+    },
+    {
+      "_id": "ui.device.4.childParameters.9.parameter",
+      "value": "TransmitPower"
+    },
+    {
+      "_id": "ui.device.4.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration"
+    },
+    {
+      "_id": "ui.device.4.type",
+      "value": "'parameter-table'"
+    },
+    {
+      "_id": "ui.device.5.parameters.0.components.0.parameters.0",
+      "value": "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection"
+    },
+    {
+      "_id": "ui.device.5.parameters.0.components.0.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.device.5.parameters.0.element",
+      "value": "'span.inform'"
+    },
+    {
+      "_id": "ui.device.5.parameters.0.label",
+      "value": "'[WAN CONNECTION]'"
+    },
+    {
+      "_id": "ui.device.5.parameters.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.device.5.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.device.6.childParameters.0.label",
+      "value": "'Enable'"
+    },
+    {
+      "_id": "ui.device.6.childParameters.0.parameter",
+      "value": "Enable"
+    },
+    {
+      "_id": "ui.device.6.childParameters.1.label",
+      "value": "'Conn Name'"
+    },
+    {
+      "_id": "ui.device.6.childParameters.1.parameter",
+      "value": "Name"
+    },
+    {
+      "_id": "ui.device.6.childParameters.2.label",
+      "value": "'VLAN'"
+    },
+    {
+      "_id": "ui.device.6.childParameters.2.parameter",
+      "value": "X_HW_VLAN"
+    },
+    {
+      "_id": "ui.device.6.childParameters.3.label",
+      "value": "'Conn Type:'"
+    },
+    {
+      "_id": "ui.device.6.childParameters.3.parameter",
+      "value": "ConnectionType"
+    },
+    {
+      "_id": "ui.device.6.childParameters.4.label",
+      "value": "'Service:'"
+    },
+    {
+      "_id": "ui.device.6.childParameters.4.parameter",
+      "value": "X_HW_SERVICELIST"
+    },
+    {
+      "_id": "ui.device.6.childParameters.5.label",
+      "value": "'Username:'"
+    },
+    {
+      "_id": "ui.device.6.childParameters.5.parameter",
+      "value": "Username"
+    },
+    {
+      "_id": "ui.device.6.childParameters.6.label",
+      "value": "'Password:'"
+    },
+    {
+      "_id": "ui.device.6.childParameters.6.parameter",
+      "value": "Password"
+    },
+    {
+      "_id": "ui.device.6.childParameters.7.label",
+      "value": "'NAT'"
+    },
+    {
+      "_id": "ui.device.6.childParameters.7.parameter",
+      "value": "NATEnabled"
+    },
+    {
+      "_id": "ui.device.6.childParameters.8.label",
+      "value": "'Status'"
+    },
+    {
+      "_id": "ui.device.6.childParameters.8.parameter",
+      "value": "ConnectionStatus"
+    },
+    {
+      "_id": "ui.device.6.parameter",
+      "value": "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection"
+    },
+    {
+      "_id": "ui.device.6.type",
+      "value": "'parameter-table'"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.0.label",
+      "value": "'Enable'"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.0.parameter",
+      "value": "Enable"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.1.label",
+      "value": "'Conn Name'"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.1.parameter",
+      "value": "Name"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.2.label",
+      "value": "'VLAN'"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.2.parameter",
+      "value": "X_HW_VLAN"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.3.label",
+      "value": "'Conn Type:'"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.3.parameter",
+      "value": "ConnectionType"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.4.label",
+      "value": "'Service:'"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.4.parameter",
+      "value": "X_CT-COM_ServiceList"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.5.label",
+      "value": "'Username:'"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.5.parameter",
+      "value": "Username"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.6.label",
+      "value": "'Password:'"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.6.parameter",
+      "value": "Password"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.7.label",
+      "value": "'NAT'"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.7.parameter",
+      "value": "NATEnabled"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.8.label",
+      "value": "'Status'"
+    },
+    {
+      "_id": "ui.device.6b.childParameters.8.parameter",
+      "value": "ConnectionStatus"
+    },
+    {
+      "_id": "ui.device.6b.label",
+      "value": "'[WAN 2 CONNECTION]'"
+    },
+    {
+      "_id": "ui.device.6b.parameter",
+      "value": "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection"
+    },
+    {
+      "_id": "ui.device.6b.type",
+      "value": "'parameter-table'"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.0.label",
+      "value": "'Enable'"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.0.parameter",
+      "value": "Enable"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.1.label",
+      "value": "'Conn Name'"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.1.parameter",
+      "value": "Name"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.2.label",
+      "value": "'VLAN'"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.2.parameter",
+      "value": "X_HW_VLAN"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.3.label",
+      "value": "'Conn Type:'"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.3.parameter",
+      "value": "ConnectionType"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.4.label",
+      "value": "'Service:'"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.4.parameter",
+      "value": "X_CT-COM_ServiceList"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.5.label",
+      "value": "'Username:'"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.5.parameter",
+      "value": "Username"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.6.label",
+      "value": "'Password:'"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.6.parameter",
+      "value": "Password"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.7.label",
+      "value": "'NAT'"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.7.parameter",
+      "value": "NATEnabled"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.8.label",
+      "value": "'Status'"
+    },
+    {
+      "_id": "ui.device.6c.childParameters.8.parameter",
+      "value": "ConnectionStatus"
+    },
+    {
+      "_id": "ui.device.6c.label",
+      "value": "'[WAN 3 CONNECTION]'"
+    },
+    {
+      "_id": "ui.device.6c.parameter",
+      "value": "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANPPPConnection"
+    },
+    {
+      "_id": "ui.device.6c.type",
+      "value": "'parameter-table'"
+    },
+    {
+      "_id": "ui.device.7.childParameters.0.label",
+      "value": "'Host name'"
+    },
+    {
+      "_id": "ui.device.7.childParameters.0.parameter",
+      "value": "HostName"
+    },
+    {
+      "_id": "ui.device.7.childParameters.1.label",
+      "value": "'IP address'"
+    },
+    {
+      "_id": "ui.device.7.childParameters.1.parameter",
+      "value": "IPAddress"
+    },
+    {
+      "_id": "ui.device.7.childParameters.2.label",
+      "value": "'MAC address'"
+    },
+    {
+      "_id": "ui.device.7.childParameters.2.parameter",
+      "value": "MACAddress"
+    },
+    {
+      "_id": "ui.device.7.childParameters.3.label",
+      "value": "'Interface'"
+    },
+    {
+      "_id": "ui.device.7.childParameters.3.parameter",
+      "value": "InterfaceType"
+    },
+    {
+      "_id": "ui.device.7.childParameters.4.label",
+      "value": "'Active'"
+    },
+    {
+      "_id": "ui.device.7.childParameters.4.parameter",
+      "value": "Active"
+    },
+    {
+      "_id": "ui.device.7.childParameters.5.label",
+      "value": "'Lease Time'"
+    },
+    {
+      "_id": "ui.device.7.childParameters.5.parameter",
+      "value": "LeaseTimeRemaining"
+    },
+    {
+      "_id": "ui.device.7.label",
+      "value": "'USER DEVICE INFORMATION'"
+    },
+    {
+      "_id": "ui.device.7.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.Hosts.Host"
+    },
+    {
+      "_id": "ui.device.7.type",
+      "value": "'parameter-table'"
+    },
+    {
+      "_id": "ui.device.8.components.0.components.0",
+      "value": "'Faults List'"
+    },
+    {
+      "_id": "ui.device.8.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.device.8.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.device.8.components.1.type",
+      "value": "'device-faults'"
+    },
+    {
+      "_id": "ui.device.8.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.device.8.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.device.9.components.0.components.0",
+      "value": "'All parameters'"
+    },
+    {
+      "_id": "ui.device.9.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.device.9.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.device.9.components.1.type",
+      "value": "'all-parameters'"
+    },
+    {
+      "_id": "ui.device.9.element",
+      "value": "'div.container-full-width'"
+    },
+    {
+      "_id": "ui.device.9.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.filters.0.label",
+      "value": "'Tag'"
+    },
+    {
+      "_id": "ui.filters.0.type",
+      "value": "'tag'"
+    },
+    {
+      "_id": "ui.filters.1.label",
+      "value": "'SN'"
+    },
+    {
+      "_id": "ui.filters.1.parameter",
+      "value": "DeviceID.SerialNumber"
+    },
+    {
+      "_id": "ui.filters.1.type",
+      "value": "'string'"
+    },
+    {
+      "_id": "ui.filters.2.label",
+      "value": "'TYPE'"
+    },
+    {
+      "_id": "ui.filters.2.parameter",
+      "value": "DeviceID.ProductClass"
+    },
+    {
+      "_id": "ui.filters.2.type",
+      "value": "'string'"
+    },
+    {
+      "_id": "ui.filters.3.label",
+      "value": "\"PPP\""
+    },
+    {
+      "_id": "ui.filters.3.parameter",
+      "value": "VirtualParameters.pppoeUsername"
+    },
+    {
+      "_id": "ui.filters.3.type",
+      "value": "\"string\""
+    },
+    {
+      "_id": "ui.filters.4.label",
+      "value": "'PON'"
+    },
+    {
+      "_id": "ui.filters.4.parameter",
+      "value": "InternetGatewayDevice.WANDevice.1.WANCommonInterfaceConfig.WANAccessType"
+    },
+    {
+      "_id": "ui.filters.4.type",
+      "value": "'string'"
+    },
+    {
+      "_id": "ui.index.0.parameters.0",
+      "value": "InternetGatewayDevice.WANDevice"
+    },
+    {
+      "_id": "ui.index.0.parameters.1",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TotalAssociations"
+    },
+    {
+      "_id": "ui.index.0.parameters.2",
+      "value": "VirtualParameters.RXPower"
+    },
+    {
+      "_id": "ui.index.0.parameters.3",
+      "value": "VirtualParameters.pppoeIP"
+    },
+    {
+      "_id": "ui.index.0.parameters.4",
+      "value": "VirtualParameters.pppoeUsername2"
+    },
+    {
+      "_id": "ui.index.0.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.index.1.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.index.1.components.1.chart",
+      "value": "'online'"
+    },
+    {
+      "_id": "ui.index.1.components.1.type",
+      "value": "'overview-dot'"
+    },
+    {
+      "_id": "ui.index.1.element",
+      "value": "'span.inform'"
+    },
+    {
+      "_id": "ui.index.1.label",
+      "value": "'Status'"
+    },
+    {
+      "_id": "ui.index.1.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.index.1.unsortable",
+      "value": "false"
+    },
+    {
+      "_id": "ui.index.10.label",
+      "value": "'Uptime'"
+    },
+    {
+      "_id": "ui.index.10.parameter",
+      "value": "VirtualParameters.getpppuptime"
+    },
+    {
+      "_id": "ui.index.11.label",
+      "value": "'Software version'"
+    },
+    {
+      "_id": "ui.index.11.parameter",
+      "value": "InternetGatewayDevice.DeviceInfo.SoftwareVersion"
+    },
+    {
+      "_id": "ui.index.12.label",
+      "value": "'Serial number'"
+    },
+    {
+      "_id": "ui.index.12.parameter",
+      "value": "DeviceID.SerialNumber"
+    },
+    {
+      "_id": "ui.index.13.label",
+      "value": "'Last inform'"
+    },
+    {
+      "_id": "ui.index.13.parameter",
+      "value": "DATE_STRING(Events.Inform)"
+    },
+    {
+      "_id": "ui.index.14.label",
+      "value": "'Lokasi'"
+    },
+    {
+      "_id": "ui.index.14.parameter",
+      "value": "Tags"
+    },
+    {
+      "_id": "ui.index.14.type",
+      "value": "'tags'"
+    },
+    {
+      "_id": "ui.index.14.unsortable",
+      "value": "true"
+    },
+    {
+      "_id": "ui.index.14.writable",
+      "value": "true"
+    },
+    {
+      "_id": "ui.index.2.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.index.2.label",
+      "value": "'PPP Username'"
+    },
+    {
+      "_id": "ui.index.2.parameter",
+      "value": "VirtualParameters.pppoeUsername2"
+    },
+    {
+      "_id": "ui.index.2.type",
+      "value": "'device-link'"
+    },
+    {
+      "_id": "ui.index.2.writable",
+      "value": "false"
+    },
+    {
+      "_id": "ui.index.3.label",
+      "value": "'Wifi'"
+    },
+    {
+      "_id": "ui.index.3.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID"
+    },
+    {
+      "_id": "ui.index.4.label",
+      "value": "'SANDI'"
+    },
+    {
+      "_id": "ui.index.4.parameter",
+      "value": "VirtualParameters.WlanPassword"
+    },
+    {
+      "_id": "ui.index.5.label",
+      "value": "'Konek'"
+    },
+    {
+      "_id": "ui.index.5.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TotalAssociations"
+    },
+    {
+      "_id": "ui.index.6.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.index.6.components.1.chart",
+      "value": "'signal'"
+    },
+    {
+      "_id": "ui.index.6.components.1.type",
+      "value": "'overview-dot'"
+    },
+    {
+      "_id": "ui.index.6.label",
+      "value": "'RX Power'"
+    },
+    {
+      "_id": "ui.index.6.parameter",
+      "value": "VirtualParameters.RXPower || ' dBm'"
+    },
+    {
+      "_id": "ui.index.6.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.index.7.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.index.7.element.attributes.href",
+      "value": "\"http://\"||ENCODEURICOMPONENT(VirtualParameters.pppoeIP)"
+    },
+    {
+      "_id": "ui.index.7.element.attributes.target",
+      "value": "'_blank'"
+    },
+    {
+      "_id": "ui.index.7.element.tag",
+      "value": "'a'"
+    },
+    {
+      "_id": "ui.index.7.label",
+      "value": "'IP Wan'"
+    },
+    {
+      "_id": "ui.index.7.parameter",
+      "value": "VirtualParameters.pppoeIP"
+    },
+    {
+      "_id": "ui.index.7.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.index.8.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.index.8.label",
+      "value": "'Product class'"
+    },
+    {
+      "_id": "ui.index.8.parameter",
+      "value": "DeviceID.ProductClass"
+    },
+    {
+      "_id": "ui.index.8.type",
+      "value": "'device-link'"
+    },
+    {
+      "_id": "ui.index.9.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.index.9.element.attributes.href",
+      "value": "\"http://\"||ENCODEURICOMPONENT(VirtualParameters.IPTR069)"
+    },
+    {
+      "_id": "ui.index.9.element.attributes.target",
+      "value": "'_blank'"
+    },
+    {
+      "_id": "ui.index.9.element.tag",
+      "value": "'a'"
+    },
+    {
+      "_id": "ui.index.9.label",
+      "value": "'IP TR069'"
+    },
+    {
+      "_id": "ui.index.9.parameter",
+      "value": "VirtualParameters.IPTR069"
+    },
+    {
+      "_id": "ui.index.9.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.0.type",
+      "value": "'tags'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.1.type",
+      "value": "'ping'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.0.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.0.components.1.chart",
+      "value": "'online'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.0.components.1.type",
+      "value": "'overview-dot'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.0.components.2.parameters.0",
+      "value": "InternetGatewayDevice"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.0.components.2.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.0.element",
+      "value": "'span.inform'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.0.label",
+      "value": "'LAST INFORM'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.0.parameter",
+      "value": "DATE_STRING(Events.Inform)"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.1.label",
+      "value": "'SERIAL NUMBER'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.1.parameter",
+      "value": "DeviceID.SerialNumber"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.10.label",
+      "value": "'PPPOE USERNAME'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.10.parameter",
+      "value": "VirtualParameters.pppoeUsername"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.11.label",
+      "value": "'PPPOE PASSWORD'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.11.parameter",
+      "value": "VirtualParameters.pppoePassword"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.12.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.12.element.attributes.href",
+      "value": "'http://' || ENCODEURICOMPONENT(VirtualParameters.pppoeIP)"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.12.element.attributes.target",
+      "value": "'_blank'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.12.element.tag",
+      "value": "'a'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.12.label",
+      "value": "'VLAN ID'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.12.parameter",
+      "value": "VirtualParameters.VlanID"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.12.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.13.label",
+      "value": "'ROUTER IP (GATEWAY)'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.13.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPRouters"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.14.label",
+      "value": "'WIFI SSID'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.14.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.15.label",
+      "value": "'WIFI PASSWORD'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.15.parameter",
+      "value": "VirtualParameters.WlanPassword"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.16.label",
+      "value": "'USER WIFI AKTIF'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.16.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TotalAssociations"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.17.label",
+      "value": "'HOTSPOT SSID'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.17.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.SSID"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.18.label",
+      "value": "'HOTSPOT AKTIF'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.18.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.TotalAssociations"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.2.label",
+      "value": "'PRODUCT CLASS'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.2.parameter",
+      "value": "DeviceID.ProductClass"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.3.label",
+      "value": "'MANUFACTURER'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.3.parameter",
+      "value": "DeviceID.Manufacturer"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.4.label",
+      "value": "'HARDWARE VERSION'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.4.parameter",
+      "value": "InternetGatewayDevice.DeviceInfo.HardwareVersion"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.5.label",
+      "value": "'SOFTWARE VERSION'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.5.parameter",
+      "value": "InternetGatewayDevice.DeviceInfo.SoftwareVersion"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.6.label",
+      "value": "'MAC ADDRESS'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.6.parameter",
+      "value": "VirtualParameters.MacAddress"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.7.label",
+      "value": "'REDAMAN (RX POWER)'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.7.parameter",
+      "value": "VirtualParameters.RXPower || ' dBm'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.8.label",
+      "value": "'SUHU PERANGKAT'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.8.parameter",
+      "value": "VirtualParameters.gettemp || ' C'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.9.label",
+      "value": "'UPTIME'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.parameters.9.parameter",
+      "value": "VirtualParameters.getpppuptime"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.2.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.3.components.0.components.0",
+      "value": "'Faults'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.3.components.0.components.1.type",
+      "value": "'device-faults'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.3.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.3.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.3.components.1.components.0.components.0",
+      "value": "'All parameters'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.3.components.1.components.0.components.1.type",
+      "value": "'all-parameters'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.3.components.1.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.3.components.1.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.3.components.1.element",
+      "value": "'div.container-full-width'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.3.components.1.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.3.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.3.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.0.components.4.type",
+      "value": "'device-actions'"
+    },
+    {
+      "_id": "ui.multiTabs.0.label",
+      "value": "'Summary'"
+    },
+    {
+      "_id": "ui.multiTabs.0.route",
+      "value": "'summary'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.0.type",
+      "value": "'tags'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.1.type",
+      "value": "'ping'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.0.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.0.components.1.chart",
+      "value": "'online'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.0.components.1.type",
+      "value": "'overview-dot'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.0.components.2.parameters.0",
+      "value": "InternetGatewayDevice.WANDevice"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.0.components.2.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.0.element",
+      "value": "'span.inform'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.0.label",
+      "value": "'LAST INFORM'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.0.parameter",
+      "value": "DATE_STRING(Events.Inform)"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.1.label",
+      "value": "'MAC ADDRESS'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.1.parameter",
+      "value": "VirtualParameters.MacAddress"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.2.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.2.element.attributes.href",
+      "value": "'http://' || ENCODEURICOMPONENT(VirtualParameters.pppoeIP)"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.2.element.attributes.target",
+      "value": "'_blank'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.2.element.tag",
+      "value": "'a'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.2.label",
+      "value": "'IP WAN / PPPOE'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.2.parameter",
+      "value": "VirtualParameters.pppoeIP"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.2.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.3.label",
+      "value": "'PPPOE USERNAME'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.3.parameter",
+      "value": "VirtualParameters.pppoeUsername"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.4.label",
+      "value": "'VLAN ID'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.4.parameter",
+      "value": "VirtualParameters.VlanID"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.5.label",
+      "value": "'REDAMAN RX POWER'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.parameters.5.parameter",
+      "value": "VirtualParameters.RXPower || ' dBm'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.2.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.0.components.0",
+      "value": "'Koneksi Internet WAN (PPPoE Connection - Tambah/Ubah/Hapus WAN)'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.0.components.1.parameters.0",
+      "value": "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.0.components.1.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.0.label",
+      "value": "'Aktif'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.0.parameter",
+      "value": "Enable"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.1.label",
+      "value": "'Nama Profil'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.1.parameter",
+      "value": "Name"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.10.label",
+      "value": "'Status'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.10.parameter",
+      "value": "ConnectionStatus"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.11.label",
+      "value": "'IP Eksternal'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.11.parameter",
+      "value": "ExternalIPAddress"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.2.label",
+      "value": "'PPPoE User'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.2.parameter",
+      "value": "Username"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.3.label",
+      "value": "'PPPoE Pass'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.3.parameter",
+      "value": "Password"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.4.label",
+      "value": "'VLAN Standar'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.4.parameter",
+      "value": "VLANID"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.5.label",
+      "value": "'VLAN CT-COM'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.5.parameter",
+      "value": "X_CT-COM_VlanID"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.6.label",
+      "value": "'VLAN ZTE/CMCC'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.6.parameter",
+      "value": "X_CMCC_VLANIDMark"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.7.label",
+      "value": "'VLAN Huawei'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.7.parameter",
+      "value": "X_HW_VLAN"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.8.label",
+      "value": "'Tipe Koneksi'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.8.parameter",
+      "value": "ConnectionType"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.9.label",
+      "value": "'NAT'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.childParameters.9.parameter",
+      "value": "NATEnabled"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.label",
+      "value": "'WAN PPP CONNECTIONS'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.parameter",
+      "value": "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.components.1.type",
+      "value": "'parameter-table'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.3.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.0.components.0",
+      "value": "'Koneksi Internet WAN PPP (Profil 2 / GM220-S / Huawei / ZTE)'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.0.components.1.parameters.0",
+      "value": "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.0.components.1.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.0.label",
+      "value": "'Aktif'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.0.parameter",
+      "value": "Enable"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.1.label",
+      "value": "'Nama Profil'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.1.parameter",
+      "value": "Name"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.10.label",
+      "value": "'Status'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.10.parameter",
+      "value": "ConnectionStatus"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.11.label",
+      "value": "'IP Eksternal'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.11.parameter",
+      "value": "ExternalIPAddress"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.2.label",
+      "value": "'PPPoE User'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.2.parameter",
+      "value": "Username"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.3.label",
+      "value": "'PPPoE Pass'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.3.parameter",
+      "value": "Password"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.4.label",
+      "value": "'VLAN Standar'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.4.parameter",
+      "value": "VLANID"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.5.label",
+      "value": "'VLAN CT-COM'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.5.parameter",
+      "value": "X_CT-COM_VlanID"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.6.label",
+      "value": "'VLAN ZTE/CMCC'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.6.parameter",
+      "value": "X_CMCC_VLANIDMark"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.7.label",
+      "value": "'VLAN Huawei'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.7.parameter",
+      "value": "X_HW_VLAN"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.8.label",
+      "value": "'Tipe Koneksi'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.8.parameter",
+      "value": "ConnectionType"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.9.label",
+      "value": "'NAT'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.childParameters.9.parameter",
+      "value": "NATEnabled"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.label",
+      "value": "'WAN PPP CONNECTIONS (PROFIL 2)'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.parameter",
+      "value": "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.components.1.type",
+      "value": "'parameter-table'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.4.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.0.components.0",
+      "value": "'Koneksi Internet WAN PPP (Profil 3)'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.0.label",
+      "value": "'Aktif'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.0.parameter",
+      "value": "Enable"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.1.label",
+      "value": "'Nama Profil'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.1.parameter",
+      "value": "Name"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.10.label",
+      "value": "'Status'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.10.parameter",
+      "value": "ConnectionStatus"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.11.label",
+      "value": "'IP Eksternal'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.11.parameter",
+      "value": "ExternalIPAddress"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.2.label",
+      "value": "'PPPoE User'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.2.parameter",
+      "value": "Username"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.3.label",
+      "value": "'PPPoE Pass'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.3.parameter",
+      "value": "Password"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.4.label",
+      "value": "'VLAN Standar'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.4.parameter",
+      "value": "VLANID"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.5.label",
+      "value": "'VLAN CT-COM'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.5.parameter",
+      "value": "X_CT-COM_VlanID"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.6.label",
+      "value": "'VLAN ZTE/CMCC'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.6.parameter",
+      "value": "X_CMCC_VLANIDMark"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.7.label",
+      "value": "'VLAN Huawei'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.7.parameter",
+      "value": "X_HW_VLAN"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.8.label",
+      "value": "'Tipe Koneksi'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.8.parameter",
+      "value": "ConnectionType"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.9.label",
+      "value": "'NAT'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.childParameters.9.parameter",
+      "value": "NATEnabled"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.label",
+      "value": "'WAN PPP CONNECTIONS (PROFIL 3)'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.parameter",
+      "value": "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANPPPConnection"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.components.1.type",
+      "value": "'parameter-table'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.5.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.1.components.6.type",
+      "value": "'device-actions'"
+    },
+    {
+      "_id": "ui.multiTabs.1.label",
+      "value": "'WAN'"
+    },
+    {
+      "_id": "ui.multiTabs.1.route",
+      "value": "'wan'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.0.type",
+      "value": "'tags'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.1.type",
+      "value": "'ping'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.0.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.0.components.1.chart",
+      "value": "'online'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.0.components.1.type",
+      "value": "'overview-dot'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.0.components.2.parameters.0",
+      "value": "InternetGatewayDevice.LANDevice"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.0.components.2.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.0.element",
+      "value": "'span.inform'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.0.label",
+      "value": "'Last inform'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.0.parameter",
+      "value": "DATE_STRING(Events.Inform)"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.1.label",
+      "value": "'Router IP (Gateway)'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.1.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPRouters"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.2.label",
+      "value": "'Subnet Mask'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.2.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.3.label",
+      "value": "'MAC ONT'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.3.parameter",
+      "value": "VirtualParameters.MacAddress"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.4.label",
+      "value": "'IP WAN / PPPoE'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.parameters.4.parameter",
+      "value": "VirtualParameters.pppoeIP"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.2.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.0.components.0",
+      "value": "'Konfigurasi Gateway & DHCP Server LAN'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.0.components.1.parameters.0",
+      "value": "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.0.components.1.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.0.label",
+      "value": "'Status DHCP Server'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.0.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPServerEnable"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.1.label",
+      "value": "'IP Gateway Router'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.1.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.2.label",
+      "value": "'Subnet Mask'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.2.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.3.label",
+      "value": "'DHCP Pool Start'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.3.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MinAddress"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.4.label",
+      "value": "'DHCP Pool End'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.4.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MaxAddress"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.5.label",
+      "value": "'DNS Server'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.5.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DNSServers"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.6.label",
+      "value": "'Lease Time (Detik)'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.parameters.6.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPLeaseTime"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.components.1.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.3.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.0.components.0",
+      "value": "'Status Port LAN Fisik (Ethernet 1 - 4)'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.0.components.1.parameters.0",
+      "value": "InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.0.components.1.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.1.childParameters.0.label",
+      "value": "'Status Link'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.1.childParameters.0.parameter",
+      "value": "Status"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.1.childParameters.1.label",
+      "value": "'Kecepatan (Mbps)'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.1.childParameters.1.parameter",
+      "value": "MaxBitRate"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.1.childParameters.2.label",
+      "value": "'Duplex'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.1.childParameters.2.parameter",
+      "value": "DuplexMode"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.1.childParameters.3.label",
+      "value": "'MAC Address'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.1.childParameters.3.parameter",
+      "value": "MACAddress"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.1.childParameters.4.label",
+      "value": "'Port Enable'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.1.childParameters.4.parameter",
+      "value": "Enable"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.1.label",
+      "value": "'PORT LAN ETHERNET'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.1.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.components.1.type",
+      "value": "'parameter-table'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.4.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.0.components.0",
+      "value": "'Daftar Perangkat Terhubung (HP / PC / CCTV / Client)'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.0.components.1.parameters.0",
+      "value": "InternetGatewayDevice.LANDevice.1.Hosts"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.0.components.1.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.childParameters.0.label",
+      "value": "'Nama Perangkat (Host)'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.childParameters.0.parameter",
+      "value": "HostName"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.childParameters.1.label",
+      "value": "'IP Address'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.childParameters.1.parameter",
+      "value": "IPAddress"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.childParameters.2.label",
+      "value": "'MAC Address'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.childParameters.2.parameter",
+      "value": "MACAddress"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.childParameters.3.label",
+      "value": "'Tipe Koneksi'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.childParameters.3.parameter",
+      "value": "InterfaceType"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.childParameters.4.label",
+      "value": "'Status Aktif'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.childParameters.4.parameter",
+      "value": "Active"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.childParameters.5.label",
+      "value": "'Sisa Sewa IP (Detik)'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.childParameters.5.parameter",
+      "value": "LeaseTimeRemaining"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.label",
+      "value": "'CLIENT DEVICES'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.Hosts.Host"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.components.1.type",
+      "value": "'parameter-table'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.5.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.2.components.6.type",
+      "value": "'device-actions'"
+    },
+    {
+      "_id": "ui.multiTabs.2.label",
+      "value": "'LAN'"
+    },
+    {
+      "_id": "ui.multiTabs.2.route",
+      "value": "'lan'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.0.type",
+      "value": "'tags'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.1.type",
+      "value": "'ping'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.0.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.0.components.1.chart",
+      "value": "'online'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.0.components.1.type",
+      "value": "'overview-dot'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.0.components.2.parameters.0",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.0.components.2.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.0.element",
+      "value": "'span.inform'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.0.label",
+      "value": "'LAST INFORM'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.0.parameter",
+      "value": "DATE_STRING(Events.Inform)"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.1.label",
+      "value": "'WIFI UTAMA (SSID 1)'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.1.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.2.label",
+      "value": "'SANDI WIFI UTAMA'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.2.parameter",
+      "value": "VirtualParameters.WlanPassword"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.3.label",
+      "value": "'USER AKTIF TERKONEKSI'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.3.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TotalAssociations"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.4.label",
+      "value": "'SALURAN (CHANNEL)'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.4.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Channel"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.5.label",
+      "value": "'STATUS RADIO WIFI'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.parameters.5.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Enable"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.2.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.0.components.0",
+      "value": "'Konfigurasi Multi-SSID WiFi (SSID 1 - 4)'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.0.components.1.parameters.0",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.0.components.1.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.0.label",
+      "value": "'Enable'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.0.parameter",
+      "value": "Enable"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.1.label",
+      "value": "'Nama WiFi (SSID)'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.1.parameter",
+      "value": "SSID"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.2.label",
+      "value": "'Sandi WiFi (Password)'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.2.parameter",
+      "value": "COALESCE(KeyPassphrase, PreSharedKey.1.KeyPassphrase)"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.3.label",
+      "value": "'Keamanan (Security)'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.3.parameter",
+      "value": "BeaconType"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.4.label",
+      "value": "'Channel'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.4.parameter",
+      "value": "Channel"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.5.label",
+      "value": "'Auto Channel'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.5.parameter",
+      "value": "AutoChannelEnable"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.6.label",
+      "value": "'Daya Pancar'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.6.parameter",
+      "value": "TransmitPower"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.7.label",
+      "value": "'User Terkoneksi'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.7.parameter",
+      "value": "TotalAssociations"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.8.label",
+      "value": "'BSSID (MAC WiFi)'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.childParameters.8.parameter",
+      "value": "BSSID"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.label",
+      "value": "'WIFI SSIDS'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.components.1.type",
+      "value": "'parameter-table'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.3.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.0.components.0",
+      "value": "'Daftar Klien WiFi Terkoneksi (Associated Devices)'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.0.components.1.parameters.0",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.0.components.1.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.1.childParameters.0.label",
+      "value": "'MAC Klien'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.1.childParameters.0.parameter",
+      "value": "AssociatedDeviceMACAddress"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.1.childParameters.1.label",
+      "value": "'IP Klien'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.1.childParameters.1.parameter",
+      "value": "AssociatedDeviceIPAddress"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.1.childParameters.2.label",
+      "value": "'Sinyal / RSSI'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.1.childParameters.2.parameter",
+      "value": "COALESCE(X_HW_RSSI, AssociatedDeviceRssi, X_ZTE-COM_RSSI, X_CT-COM_RSSI)"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.1.childParameters.3.label",
+      "value": "'Nama Perangkat'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.1.childParameters.3.parameter",
+      "value": "COALESCE(X_HW_AssociatedDevicedescriptions, X_ZTE-COM_AssociatedDeviceName, X_ZTE-COM_DeviceName)"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.1.label",
+      "value": "'WIFI CLIENTS'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.1.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.components.1.type",
+      "value": "'parameter-table'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.4.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.3.components.5.type",
+      "value": "'device-actions'"
+    },
+    {
+      "_id": "ui.multiTabs.3.label",
+      "value": "'WLAN'"
+    },
+    {
+      "_id": "ui.multiTabs.3.route",
+      "value": "'wlan'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.0.type",
+      "value": "'tags'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.1.type",
+      "value": "'ping'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.0.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.0.components.1.chart",
+      "value": "'online'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.0.components.1.type",
+      "value": "'overview-dot'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.0.components.2.parameters.0",
+      "value": "InternetGatewayDevice.DeviceInfo"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.0.components.2.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.0.element",
+      "value": "'span.inform'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.0.label",
+      "value": "'LAST INFORM'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.0.parameter",
+      "value": "DATE_STRING(Events.Inform)"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.1.label",
+      "value": "'PRODUK & MODEL'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.1.parameter",
+      "value": "DeviceID.ProductClass"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.2.label",
+      "value": "'MANUFACTURER'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.2.parameter",
+      "value": "DeviceID.Manufacturer"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.3.label",
+      "value": "'SERIAL NUMBER'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.3.parameter",
+      "value": "DeviceID.SerialNumber"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.4.label",
+      "value": "'IP GATEWAY ONT'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.parameters.4.parameter",
+      "value": "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPRouters"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.2.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.3.components.0.components.0",
+      "value": "'Kredensial SuperAdmin Web GUI Modem (Akses Penuh Teknisi)'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.3.components.0.components.1.parameters.0",
+      "value": "VirtualParameters.superAdmin"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.3.components.0.components.1.parameters.1",
+      "value": "VirtualParameters.superPassword"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.3.components.0.components.1.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.3.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.3.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.3.components.1.parameters.0.label",
+      "value": "'SuperAdmin User'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.3.components.1.parameters.0.parameter",
+      "value": "VirtualParameters.superAdmin"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.3.components.1.parameters.1.label",
+      "value": "'SuperAdmin Password'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.3.components.1.parameters.1.parameter",
+      "value": "VirtualParameters.superPassword"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.3.components.1.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.3.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.3.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.4.components.0.components.0",
+      "value": "'Kredensial User Biasa Web GUI Modem (Akses Pelanggan)'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.4.components.0.components.1.parameters.0",
+      "value": "VirtualParameters.userAdmin"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.4.components.0.components.1.parameters.1",
+      "value": "VirtualParameters.userPassword"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.4.components.0.components.1.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.4.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.4.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.4.components.1.parameters.0.label",
+      "value": "'User Biasa Username'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.4.components.1.parameters.0.parameter",
+      "value": "VirtualParameters.userAdmin"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.4.components.1.parameters.1.label",
+      "value": "'User Biasa Password'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.4.components.1.parameters.1.parameter",
+      "value": "VirtualParameters.userPassword"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.4.components.1.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.4.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.4.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.5.components.0.components.0",
+      "value": "'Tautan Buka Web GUI Modem'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.5.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.5.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.5.components.1.parameters.0.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.5.components.1.parameters.0.element.attributes.href",
+      "value": "'http://' || ENCODEURICOMPONENT(VirtualParameters.pppoeIP)"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.5.components.1.parameters.0.element.attributes.target",
+      "value": "'_blank'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.5.components.1.parameters.0.element.tag",
+      "value": "'a'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.5.components.1.parameters.0.label",
+      "value": "'Buka Web GUI via IP WAN'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.5.components.1.parameters.0.parameter",
+      "value": "VirtualParameters.pppoeIP"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.5.components.1.parameters.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.5.components.1.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.5.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.5.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.4.components.6.type",
+      "value": "'device-actions'"
+    },
+    {
+      "_id": "ui.multiTabs.4.label",
+      "value": "'USER'"
+    },
+    {
+      "_id": "ui.multiTabs.4.route",
+      "value": "'user'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.0.type",
+      "value": "'tags'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.1.type",
+      "value": "'ping'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.0.components.0.type",
+      "value": "'parameter'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.0.components.1.chart",
+      "value": "'online'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.0.components.1.type",
+      "value": "'overview-dot'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.0.components.2.parameters.0",
+      "value": "InternetGatewayDevice.ManagementServer"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.0.components.2.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.0.element",
+      "value": "'span.inform'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.0.label",
+      "value": "'LAST INFORM'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.0.parameter",
+      "value": "DATE_STRING(Events.Inform)"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.1.label",
+      "value": "'MAC ONT'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.1.parameter",
+      "value": "VirtualParameters.MacAddress"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.2.label",
+      "value": "'IP WAN / PPPOE'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.2.parameter",
+      "value": "VirtualParameters.pppoeIP"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.3.label",
+      "value": "'PERIODIC INFORM'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.3.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.PeriodicInformEnable"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.4.label",
+      "value": "'INFORM INTERVAL'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.parameters.4.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.PeriodicInformInterval"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.2.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.0.components.0",
+      "value": "'Konfigurasi Manajemen Server CWMP / TR-069'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.0.components.1.parameters.0",
+      "value": "InternetGatewayDevice.ManagementServer"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.0.components.1.type",
+      "value": "'summon-button'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.0.element",
+      "value": "'h3'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.0.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.0.label",
+      "value": "'Status Manajemen CWMP'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.0.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.EnableCWMP"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.1.label",
+      "value": "'Periodic Inform Aktif'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.1.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.PeriodicInformEnable"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.2.label",
+      "value": "'Interval Inform (Detik)'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.2.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.PeriodicInformInterval"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.3.label",
+      "value": "'Waktu Inform Terjadwal'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.3.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.PeriodicInformTime"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.4.label",
+      "value": "'URL ACS Server'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.4.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.URL"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.5.label",
+      "value": "'ACS Username'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.5.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.Username"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.6.label",
+      "value": "'ACS Password'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.6.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.Password"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.7.label",
+      "value": "'Connection Request URL'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.7.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.ConnectionRequestURL"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.8.label",
+      "value": "'Connection Request User'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.8.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.ConnectionRequestUsername"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.9.label",
+      "value": "'Connection Request Pass'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.parameters.9.parameter",
+      "value": "InternetGatewayDevice.ManagementServer.ConnectionRequestPassword"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.components.1.type",
+      "value": "'parameter-list'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.element",
+      "value": "'div'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.3.type",
+      "value": "'container'"
+    },
+    {
+      "_id": "ui.multiTabs.5.components.4.type",
+      "value": "'device-actions'"
+    },
+    {
+      "_id": "ui.multiTabs.5.label",
+      "value": "'TR069'"
+    },
+    {
+      "_id": "ui.multiTabs.5.route",
+      "value": "'tr069'"
+    },
+    {
+      "_id": "ui.overview.charts.Access Type.label",
+      "value": "'Access Type'"
+    },
+    {
+      "_id": "ui.overview.charts.Access Type.slices.1_GPON.color",
+      "value": "'#00DBFF'"
+    },
+    {
+      "_id": "ui.overview.charts.Access Type.slices.1_GPON.filter",
+      "value": "VirtualParameters.getponmode = \"GPON\" OR VirtualParameters.getponmode = \"X_CU_GPON\""
+    },
+    {
+      "_id": "ui.overview.charts.Access Type.slices.1_GPON.label",
+      "value": "'GPON'"
+    },
+    {
+      "_id": "ui.overview.charts.Access Type.slices.2_EPON.color",
+      "value": "'#5BFF00'"
+    },
+    {
+      "_id": "ui.overview.charts.Access Type.slices.2_EPON.filter",
+      "value": "VirtualParameters.getponmode = \"EPON\" OR VirtualParameters.getponmode = \"X_CU_EPON\""
+    },
+    {
+      "_id": "ui.overview.charts.Access Type.slices.2_EPON.label",
+      "value": "'EPON'"
+    },
+    {
+      "_id": "ui.overview.charts.Access Type.slices.3_ETHER.color",
+      "value": "'#A400FF'"
+    },
+    {
+      "_id": "ui.overview.charts.Access Type.slices.3_ETHER.filter",
+      "value": "VirtualParameters.getponmode = \"Ethernet\" OR VirtualParameters.getponmode = \"\""
+    },
+    {
+      "_id": "ui.overview.charts.Access Type.slices.3_ETHER.label",
+      "value": "'Ethernet/Converter'"
+    },
+    {
+      "_id": "ui.overview.charts.PON Power.label",
+      "value": "\"Optical RX\""
+    },
+    {
+      "_id": "ui.overview.charts.PON Power.slices.1_Normal.color",
+      "value": "'#0000FF'"
+    },
+    {
+      "_id": "ui.overview.charts.PON Power.slices.1_Normal.filter",
+      "value": "VirtualParameters.RXPower <= \"-21\" OR VirtualParameters.RXPower > \"-50\" AND VirtualParameters.RXPower <> \"N/A\""
+    },
+    {
+      "_id": "ui.overview.charts.PON Power.slices.1_Normal.label",
+      "value": "'Bagus'"
+    },
+    {
+      "_id": "ui.overview.charts.PON Power.slices.2_Warning.color",
+      "value": "\"#7CFC00\""
+    },
+    {
+      "_id": "ui.overview.charts.PON Power.slices.2_Warning.filter",
+      "value": "VirtualParameters.RXPower > \"-21\" AND VirtualParameters.RXPower < \"-25.99\""
+    },
+    {
+      "_id": "ui.overview.charts.PON Power.slices.2_Warning.label",
+      "value": "'Sedang'"
+    },
+    {
+      "_id": "ui.overview.charts.PON Power.slices.3_Critical.color",
+      "value": "\"#FF2400\""
+    },
+    {
+      "_id": "ui.overview.charts.PON Power.slices.3_Critical.filter",
+      "value": "VirtualParameters.RXPower >= \"-26\" AND VirtualParameters.RXPower <> \"N/A\" AND VirtualParameters.RXPower < \"-50\""
+    },
+    {
+      "_id": "ui.overview.charts.PON Power.slices.3_Critical.label",
+      "value": "'Kritis'"
+    },
+    {
+      "_id": "ui.overview.charts.devreg.label",
+      "value": "'Devices Register'"
+    },
+    {
+      "_id": "ui.overview.charts.devreg.slices.2_hariini.color",
+      "value": "'#D65315'"
+    },
+    {
+      "_id": "ui.overview.charts.devreg.slices.2_hariini.filter",
+      "value": "Events.Registered > (NOW() - 5 * 60 * 1000) - (24 * 60 * 60 * 1000)"
+    },
+    {
+      "_id": "ui.overview.charts.devreg.slices.2_hariini.label",
+      "value": "'Register Hari Ini'"
+    },
+    {
+      "_id": "ui.overview.charts.devreg.slices.3_minggu.color",
+      "value": "'#A400FF'"
+    },
+    {
+      "_id": "ui.overview.charts.devreg.slices.3_minggu.filter",
+      "value": "Events.Registered > (NOW() - 5 * 60 * 1000) - (24 * 7 * 60 * 60 * 1000) AND Events.Registered < (NOW() - 5 * 60 * 1000) - (24 * 60 * 60 * 1000)"
+    },
+    {
+      "_id": "ui.overview.charts.devreg.slices.3_minggu.label",
+      "value": "'Register < 7 hari'"
+    },
+    {
+      "_id": "ui.overview.charts.devreg.slices.4_bulan.color",
+      "value": "'#5BFF00'"
+    },
+    {
+      "_id": "ui.overview.charts.devreg.slices.4_bulan.filter",
+      "value": "Events.Registered > (NOW() - 5 * 60 * 1000) - (24 * 30 * 60 * 60 * 1000) AND Events.Registered < (NOW() - 5 * 60 * 1000) - (24 * 7 * 60 * 60 * 1000)"
+    },
+    {
+      "_id": "ui.overview.charts.devreg.slices.4_bulan.label",
+      "value": "'Register < 30 hari'"
+    },
+    {
+      "_id": "ui.overview.charts.online.label",
+      "value": "\"status\""
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.1_onlineNow.color",
+      "value": "'#00DBFF'"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.1_onlineNow.filter",
+      "value": "Events.Inform > NOW() - 600 * 1000"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.1_onlineNow.label",
+      "value": "'on'"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.2_past5m.color",
+      "value": "'#FF2400'"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.2_past5m.filter",
+      "value": "Events.Inform < (NOW() - 600 * 1000) AND Events.Inform > (NOW() - 24 * 60 * 60 * 1000)"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.2_past5m.label",
+      "value": "'off'"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.4_past24h.color",
+      "value": "'#a82d2d'"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.4_past24h.filter",
+      "value": "Events.Inform < (NOW() - 5 * 60 * 1000) - (24 * 60 * 60 * 1000) AND Events.Inform > (NOW() - 5 * 60 * 1000) - (3 * 24 * 60 * 60 * 1000)"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.4_past24h.label",
+      "value": "'off > 24h'"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.5_past3d.color",
+      "value": "'#823333'"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.5_past3d.filter",
+      "value": "Events.Inform < (NOW() - 5 * 60 * 1000) - (3 * 24 * 60 * 60 * 1000) AND Events.Inform > (NOW() - 5 * 60 * 1000) - (7 * 24 * 60 * 60 * 1000)"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.5_past3d.label",
+      "value": "'off > 3d'"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.6_past7d.color",
+      "value": "'#5c3333'"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.6_past7d.filter",
+      "value": "Events.Inform < (NOW() - 5 * 60 * 1000) - (7 * 24 * 60 * 60 * 1000) AND Events.Inform > (NOW() - 5 * 60 * 1000) - (30 * 24 * 60 * 60 * 1000)"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.6_past7d.label",
+      "value": "'off > 7d'"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.7_past30d.color",
+      "value": "'#3b2727'"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.7_past30d.filter",
+      "value": "Events.Inform < (NOW() - 5 * 60 * 1000) - (30 * 24 * 60 * 60 * 1000)"
+    },
+    {
+      "_id": "ui.overview.charts.online.slices.7_past30d.label",
+      "value": "'off > 30d'"
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.label",
+      "value": "'Merk Perangkat'"
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.1_Huawei.color",
+      "value": "'#00DBFF'"
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.1_Huawei.filter",
+      "value": "DeviceID.Manufacturer = \"Huawei Technologies Co., Ltd\" OR DeviceID.Manufacturer = \"EcomTech Technologies Co., Ltd\""
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.1_Huawei.label",
+      "value": "'Huawei'"
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.2_Fiberhome.color",
+      "value": "'#37D615'"
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.2_Fiberhome.filter",
+      "value": "DeviceID.Manufacturer = \"FiberHome\""
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.2_Fiberhome.label",
+      "value": "'FiberHome'"
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.4_TOTO.color",
+      "value": "'#A400FF'"
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.4_TOTO.filter",
+      "value": "DeviceID.Manufacturer = \"ZIONCOM\""
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.4_TOTO.label",
+      "value": "'TOTOLINK'"
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.5_ZTE.color",
+      "value": "'#FBF104'"
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.5_ZTE.filter",
+      "value": "DeviceID.Manufacturer = \"ZTE\""
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.5_ZTE.label",
+      "value": "'ZTE'"
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.6_Mikrotik.color",
+      "value": "'#FB0489'"
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.6_Mikrotik.filter",
+      "value": "DeviceID.Manufacturer = \"MikroTik\""
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.6_Mikrotik.label",
+      "value": "'MikroTik'"
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.7_Other.color",
+      "value": "'#D65315'"
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.7_Other.filter",
+      "value": "DeviceID.Manufacturer <> \"MikroTik\" AND DeviceID.Manufacturer <> \"ZTE\" AND DeviceID.Manufacturer <> \"ZIONCOM\" AND DeviceID.Manufacturer <> \"EcomTech Technologies Co., Ltd\" AND DeviceID.Manufacturer <> \"FiberHome\" AND DeviceID.Manufacturer <> \"Huawei Technologies Co., Ltd\""
+    },
+    {
+      "_id": "ui.overview.charts.ont-type.slices.7_Other.label",
+      "value": "'Other'"
+    },
+    {
+      "_id": "ui.overview.charts.temp.label",
+      "value": "\"Optical Temperatur\""
+    },
+    {
+      "_id": "ui.overview.charts.temp.slices.1_Normal.color",
+      "value": "'#00DBFF'"
+    },
+    {
+      "_id": "ui.overview.charts.temp.slices.1_Normal.filter",
+      "value": "VirtualParameters.gettemp <= \"45\""
+    },
+    {
+      "_id": "ui.overview.charts.temp.slices.1_Normal.label",
+      "value": "'Adem < 45℃'"
+    },
+    {
+      "_id": "ui.overview.charts.temp.slices.2_Warning.color",
+      "value": "\"#fffa00\""
+    },
+    {
+      "_id": "ui.overview.charts.temp.slices.2_Warning.filter",
+      "value": "VirtualParameters.gettemp > \"45\" AND VirtualParameters.gettemp < \"60\""
+    },
+    {
+      "_id": "ui.overview.charts.temp.slices.2_Warning.label",
+      "value": "'Anget > 45℃'"
+    },
+    {
+      "_id": "ui.overview.charts.temp.slices.3_Critical.color",
+      "value": "\"#FF2400\""
+    },
+    {
+      "_id": "ui.overview.charts.temp.slices.3_Critical.filter",
+      "value": "VirtualParameters.gettemp >= \"65\" AND VirtualParameters.gettemp < \"70\""
+    },
+    {
+      "_id": "ui.overview.charts.temp.slices.3_Critical.label",
+      "value": "'Puanass > 65℃'"
+    },
+    {
+      "_id": "ui.overview.charts.temp.slices.4_Critical.color",
+      "value": "\"#FF2400\""
+    },
+    {
+      "_id": "ui.overview.charts.temp.slices.4_Critical.filter",
+      "value": "VirtualParameters.gettemp >= \"70\" AND VirtualParameters.gettemp <> \"N/A\""
+    },
+    {
+      "_id": "ui.overview.charts.temp.slices.4_Critical.label",
+      "value": "'Awas!!! > 70℃'"
+    },
+    {
+      "_id": "ui.overview.groups.1_status.charts.0",
+      "value": "'online'"
+    },
+    {
+      "_id": "ui.overview.groups.1_status.charts.1",
+      "value": "'Access Type'"
+    },
+    {
+      "_id": "ui.overview.groups.1_status.charts.2",
+      "value": "\"PON Power\""
+    },
+    {
+      "_id": "ui.overview.groups.1_status.label",
+      "value": "'ACS Config & Monitoring'"
+    },
+    {
+      "_id": "ui.overview.groups.2_register.charts.0",
+      "value": "'ont-type'"
+    },
+    {
+      "_id": "ui.overview.groups.2_register.charts.1",
+      "value": "'devreg'"
+    },
+    {
+      "_id": "ui.overview.groups.2_register.charts.2",
+      "value": "'temp'"
+    },
+    {
+      "_id": "ui.pageSize",
+      "value": "500"
+    }
+  ]
+}

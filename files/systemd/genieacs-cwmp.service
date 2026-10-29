@@ -1,0 +1,17 @@
+[Unit]
+Description=GenieACS CWMP
+After=network.target mongod.service
+Wants=mongod.service
+
+[Service]
+User=genieacs
+Group=genieacs
+EnvironmentFile=/opt/genieacs/genieacs.env
+PermissionsStartOnly=true
+ExecStartPre=/usr/bin/install -d -m 0775 -o genieacs -g genieacs /var/log/genieacs /opt/genieacs/ext
+ExecStart=/usr/bin/genieacs-cwmp
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donasi & Dukungan - ALIJAYA NET</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #12161f;
+      --card-bg: #1a2230;
+      --card-border: #2a364a;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #10b981;
+      --success-hover: #059669;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #f43f5e;
+      --accent-glow: rgba(244, 63, 94, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px;
+      overflow-y: auto;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 820px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .header-banner {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    .heart-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+      background: linear-gradient(to right, #ffffff, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .qris-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .qris-image-wrapper {
+      background: #ffffff;
+      padding: 12px;
+      border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+      margin-bottom: 16px;
+      width: 100%;
+      max-width: 290px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.25s ease;
+      cursor: pointer;
+    }
+
+    .qris-image-wrapper:hover {
+      transform: scale(1.02);
+    }
+
+    .qris-image-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 8px;
+    }
+
+    .qris-tip {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .info-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-item {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .info-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .info-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .info-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: #ffffff;
+      font-family: monospace;
+    }
+
+    .copy-btn {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .copy-btn.copied {
+      background: var(--success);
+      color: #ffffff;
+      border-color: var(--success);
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 13px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .btn-portal {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-portal:hover {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn-wa {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-wa:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+    }
+
+    .apps-strip {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .apps-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .apps-badges {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .badge {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .footer-text {
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Header Banner -->
+    <div class="header-banner">
+      <div class="heart-badge">
+        <span>💖</span> DUKUNGAN & DONASI
+      </div>
+      <h1>Dukung Pengembangan ALIJAYA NET</h1>
+      <p class="subtitle">
+        Donasi seikhlasnya untuk pengembangan aplikasi Genieacs Multitab Mod
+      </p>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="content-grid">
+      
+      <!-- Left: QRIS Card -->
+      <div class="qris-card">
+        <div class="qris-image-wrapper" title="Klik untuk memperbesar gambar">
+          <img src="/qris.jpg" alt="QRIS ALIJAYA NET" id="qrisImg">
+        </div>
+        <p class="qris-tip">📱 Pindai (Scan) QRIS di atas menggunakan aplikasi mobile banking atau e-wallet apa saja.</p>
+      </div>
+
+      <!-- Right: Details & Actions -->
+      <div class="info-card">
+        <div>
+          <div class="section-title">
+            <span>📋</span> Informasi Merchant & Pembayaran
+          </div>
+
+          <div class="info-item">
+            <div class="info-meta">
+              <span class="info-label">Nama Merchant</span>
+              <span class="info-value">ALIJAYA</span>
+            </div>
+            <button class="copy-btn" onclick="copyText('ALIJAYA', this)">Salin</button>
+          </div>
+
+          <div class="info-item">
+            <div class="info-meta">
+              <span class="info-label">NMID (National Merchant ID)</span>
+              <span class="info-value">ID1023270801252</span>
+            </div>
+            <button class="copy-btn" onclick="copyText('ID1023270801252', this)">Salin</button>
+          </div>
+
+          <div class="info-item">
+            <div class="info-meta">
+              <span class="info-label">Kontak / Konfirmasi WA</span>
+              <span class="info-value">081947215703</span>
+            </div>
+            <button class="copy-btn" onclick="copyText('081947215703', this)">Salin</button>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <a href="https://app.alijaya.com/donasi" target="_blank" class="btn btn-portal">
+            <span>🌐</span> Buka Halaman Donasi Online (Web) <span>↗</span>
+          </a>
+          <a href="https://wa.me/6281947215703?text=Halo%20Admin%20ALIJAYA%20NET,%20saya%20sudah%20mengirimkan%20donasi%20untuk%20pengembangan%20aplikasi%20Genieacs%20Multitab%20Mod.%20Terima%20kasih!" target="_blank" class="btn btn-wa">
+            <span>💬</span> Konfirmasi via WhatsApp CS
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Supported Apps Strip -->
+    <div class="apps-strip">
+      <div class="apps-title">Mendukung Seluruh Pembayaran Digital Berlogo QRIS / GPN:</div>
+      <div class="apps-badges">
+        <span class="badge">BCA Mobile</span>
+        <span class="badge">Livin' Mandiri</span>
+        <span class="badge">BRImo</span>
+        <span class="badge">BNI Mobile</span>
+        <span class="badge">GoPay</span>
+        <span class="badge">OVO</span>
+        <span class="badge">DANA</span>
+        <span class="badge">ShopeePay</span>
+        <span class="badge">LinkAja</span>
+        <span class="badge">SeaBank</span>
+        <span class="badge">Jago</span>
+        <span class="badge">+ Semua Bank / E-Wallet</span>
+      </div>
+    </div>
+
+    <div class="footer-text">
+      Terima kasih sebesar-besarnya atas segala bentuk apresiasi dan dukungan Anda! ✨ ALIJAYA NET
+    </div>
+
+  </div>
+
+  <script>
+    function copyText(val, btn) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(val).then(() => {
+          showCopied(btn);
+        }).catch(() => fallbackCopy(val, btn));
+      } else {
+        fallbackCopy(val, btn);
+      }
+    }
+
+    function fallbackCopy(val, btn) {
+      const el = document.createElement('textarea');
+      el.value = val;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      showCopied(btn);
+    }
+
+    function showCopied(btn) {
+      const orig = btn.innerText;
+      btn.innerText = 'Tersalin!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.innerText = orig;
+        btn.classList.remove('copied');
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

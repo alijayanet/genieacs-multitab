@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengaturan Bot AI & WhatsApp - ALIJAYA NET</title>
+  <style>
+    :root {
+      --bg: #050833;
+      --card: #080d22;
+      --card-inner: #040714;
+      --border: #1c274c;
+      --primary: #00e5ff;
+      --primary-btn: #046380;
+      --primary-hover: #00b4d8;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif; }
+    html { min-height: 100vh; background-color: var(--bg); }
+    body { background-color: transparent; color: var(--text); padding: 14px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 860px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 22px; box-shadow: 0 4px 25px rgba(0,0,0,0.45); }
+    
+    .header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 14px; position: relative; }
+    .header h2 { font-size: 1.35rem; color: var(--primary); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; letter-spacing: 0.3px; }
+    .header p { color: var(--text-muted); font-size: 0.84rem; margin-top: 4px; }
+    .btn-header-logout {
+      position: absolute; right: 0; top: 0;
+      background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5; padding: 5px 12px; border-radius: 6px; cursor: pointer;
+      font-size: 0.78rem; font-weight: 600; transition: all 0.2s;
+    }
+    .btn-header-logout:hover { background: #ef4444; color: #fff; }
+
+    /* Tabs Navigation */
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .tab-btn { flex: 1; padding: 10px 14px; background: var(--card-inner); border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); font-weight: 600; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .tab-btn:hover { background: #0f1c3f; color: #fff; }
+    .tab-btn.active { background: var(--primary-btn); color: #fff; border-color: var(--primary); font-weight: 700; box-shadow: 0 0 10px rgba(0,229,255,0.25); }
+    
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; animation: fadeIn 0.2s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.86rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+    input[type="text"], input[type="password"], select, textarea {
+      width: 100%; padding: 10px 14px; background: var(--card-inner); border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 0.92rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(0, 229, 255, 0.35); }
+    textarea { resize: vertical; min-height: 60px; }
+
+    /* WhatsApp Status Card */
+    .status-card { background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 18px; text-align: center; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; text-transform: uppercase; margin-bottom: 10px; }
+    .badge-open { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid var(--success); }
+    .badge-qr { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid var(--warning); }
+    .badge-connecting { background: rgba(6, 182, 212, 0.15); color: #22d3ee; border: 1px solid var(--primary); }
+    .badge-disconnected { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid var(--danger); }
+
+    .qr-box { margin-top: 12px; }
+    .qr-box img { width: 230px; height: 230px; background: #fff; padding: 8px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+
+    .btn-row { display: flex; gap: 12px; margin-top: 22px; }
+    button { flex: 1; padding: 11px 16px; border: none; border-radius: 6px; font-weight: 600; font-size: 0.92rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-save { background: linear-gradient(135deg, #046380 0%, #0891b2 100%); color: #fff; font-weight: 700; border: 1px solid #00e5ff; box-shadow: 0 2px 8px rgba(4,99,128,0.4); }
+    .btn-save:hover { background: #00e5ff; color: #000; box-shadow: 0 0 14px rgba(0,229,255,0.6); }
+    .btn-test { background: #131e3d; border: 1px solid #23355e; color: #e2e8f0; }
+    .btn-test:hover { background: #1c2b54; color: #fff; }
+    .btn-logout { background: #450a0a; color: #fca5a5; border: 1px solid #ef4444; padding: 6px 14px; font-size: 0.85rem; border-radius: 6px; margin-top: 10px; display: inline-flex; }
+    .btn-logout:hover { background: #7f1d1d; color: #fff; }
+    .btn-reset-wa {
+      background: #450a0a;
+      color: #fca5a5;
+      border: 1px solid #dc2626;
+      padding: 9px 18px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-reset-wa:hover {
+      background: #7f1d1d;
+      color: #fff;
+      box-shadow: 0 0 10px rgba(220,38,38,0.4);
+    }
+
+    .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 0.9rem; display: none; }
+    .alert-success { background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success); color: #34d399; }
+    .alert-error { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #f87171; }
+    .back-link { display: inline-block; margin-top: 18px; text-decoration: none; color: var(--primary); font-size: 0.85rem; font-weight: 500; }
+    .back-link:hover { text-decoration: underline; }
+
+    .version-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+    @media (max-width: 600px) {
+      .version-grid { grid-template-columns: 1fr; }
+    }
+
+    /* In-Iframe styling: seamlessly blend with GenieACS SPA */
+    body.in-iframe { padding: 8px 12px; }
+    body.in-iframe .container { max-width: 100%; border: 1px solid var(--border); box-shadow: none; background: rgba(8, 13, 34, 0.85); }
+    body.in-iframe #backToAcs { display: none !important; }
+  </style></head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div style="display: flex; align-items: center; justify-content: space-between; position: relative;">
+        <h2 style="margin: 0 auto; display: flex; align-items: center; gap: 8px;">🤖 Pengaturan Bot AI & WhatsApp</h2>
+        <button type="button" onclick="handleAdminLogout()" class="btn-header-logout">🚪 Logout</button>
+      </div>
+      <p>Panel Kontrol TR-069 GenieACS, Bot Telegram & Gateway WhatsApp Baileys</p>
+    </div>
+
+    <div id="alertBox" class="alert"></div>
+
+    <div class="tabs">
+      <button type="button" class="tab-btn active" onclick="switchTab('tab-wa')">📱 WhatsApp (Baileys)</button>
+      <button type="button" class="tab-btn" onclick="switchTab('tab-tg')">✈️ Telegram Bot</button>
+      <button type="button" class="tab-btn" onclick="switchTab('tab-brand')">🏢 Brand & AI</button>
+      <button type="button" class="tab-btn" onclick="switchTab('tab-update')">🔄 Sistem & Update</button>
+    </div>
+
+    <form id="botForm">
+      <!-- TAB 1: WHATSAPP (BAILEYS) -->
+      <div id="tab-wa" class="tab-pane active">
+        <div class="status-card">
+          <span id="waBadge" class="badge badge-connecting">MEMUAT STATUS...</span>
+          
+          <div id="waConnectedBox" style="display: none;">
+            <p style="color: #34d399; font-weight: 600; font-size: 1.05rem;">✅ Bot WhatsApp Siap Digunakan</p>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Akun: <b id="waUser" style="color: #fff;">-</b></p>
+            <button type="button" class="btn-logout" onclick="logoutWA()">🔴 Putus Koneksi / Logout</button>
+          </div>
+
+          <div id="waQrBox" class="qr-box" style="display: none;">
+            <p style="font-size: 0.88rem; color: #fbbf24; font-weight: 600; margin-bottom: 6px;">📷 Pindai Kode QR WhatsApp</p>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Buka WhatsApp di HP ➔ <b>Perangkat Tertaut</b> ➔ <b>Tautkan Perangkat</b></p>
+            <img id="waQrImg" src="" alt="WhatsApp QR Code" />
+            <p style="font-size: 0.75rem; color: var(--primary); margin-top: 8px;">Auto-refresh aktif setiap 3 detik 🔄</p>
+          </div>
+
+          <div id="waOfflineBox" style="display: none;">
+            <p style="color: #f87171; font-size: 0.88rem;">⚠️ Service WhatsApp belum aktif di port 7559.<br>Pastikan daemon <code>genieacs-whatsapp.service</code> sedang berjalan.</p>
+          </div>
+
+          <div class="session-actions" style="margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; text-align: center;">
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 8px;">
+              Ingin mengganti nomor bot WhatsApp baru atau membuat ulang QR Code?
+            </p>
+            <button type="button" class="btn-reset-wa" onclick="resetWA()">
+              🗑️ Hapus Sesi WhatsApp (Ganti Nomor Bot / Buat QR Baru)
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Status Layanan Bot WhatsApp:</label>
+          <select id="wa_enabled" name="wa_enabled">
+            <option value="true">Aktif (Enabled) 🟢</option>
+            <option value="false">Nonaktif (Disabled) 🔴</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Nomor WhatsApp Admin / Teknisi:</label>
+          <textarea id="wa_admin_numbers" name="wa_admin_numbers" placeholder="Contoh: 081947215703, 081234567890"></textarea>
+          <div class="hint">Nomor yang memiliki hak akses perintah administratif (cek, redaman, reboot, wifion/off, ssid, dll). Pisahkan koma jika lebih dari satu.</div>
+        </div>
+
+        <div style="background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 14px; margin-bottom: 6px;">
+          <h4 style="font-size: 0.92rem; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            📶 Layanan OTP WhatsApp (Portal Mandiri WiFi Pelanggan)
+          </h4>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+            Pelanggan login ke web mandiri (ubah nama WiFi / password / cek redaman) menggunakan kode OTP 4 digit yang dikirimkan otomatis via WhatsApp.
+          </p>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label>Metode Verifikasi Login Pelanggan:</label>
+            <select id="otp_enabled" name="otp_enabled" onchange="toggleOtpExpiryVisibility()">
+              <option value="true">Gunakan Kode OTP WhatsApp (Wajib OTP 4 Digit) 🟢</option>
+              <option value="false">Tanpa OTP (Cukup Masukkan Nomor Pelanggan / HP) 🟡</option>
+            </select>
+            <div class="hint">
+              • <b>Gunakan Kode OTP WhatsApp</b>: Pelanggan wajib verifikasi kode OTP 4 digit yang dikirim via WhatsApp.<br>
+              • <b>Tanpa OTP</b>: Pelanggan bisa langsung login ke dashboard WiFi hanya dengan mengetik nomor pelanggan / WhatsApp tanpa perlu kode OTP.
+            </div>
+          </div>
+
+          <div class="form-group" id="otpExpiryGroup" style="margin-bottom: 0;">
+            <label>Waktu Expired Kode OTP (Menit):</label>
+            <input type="number" id="otp_expiry_minutes" name="otp_expiry_minutes" min="1" max="60" value="5" placeholder="Contoh: 5">
+            <div class="hint">Berapa menit kode OTP 4 digit berlaku sebelum kedaluwarsa (default: 5 menit). Berlaku saat mode OTP WhatsApp aktif.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: TELEGRAM BOT -->
+      <div id="tab-tg" class="tab-pane">
+        <div class="form-group">
+          <label>Status Layanan Bot Telegram:</label>
+          <select id="bot_enabled" name="enabled">
+            <option value="true">Aktif (Enabled) 🟢</option>
+            <option value="false">Nonaktif (Disabled) 🔴</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Token Bot Telegram:</label>
+          <input type="text" id="bot_token" name="token" placeholder="Contoh: 123456789:AAFMD7X_xxxxxxxxxxxxxx">
+          <div class="hint">Dapatkan dari @BotFather di Telegram.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Admin Chat ID / ID Grup Telegram:</label>
+          <input type="text" id="admin_id" name="admin_id" placeholder="Contoh: 567858628 atau 567858628, -100987654321">
+          <div class="hint">Dapatkan ID Anda dari @userinfobot. Bisa isi beberapa ID dipisah koma.</div>
+        </div>
+
+        <div style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <button type="button" id="btnTest" class="btn-test">🧪 Tes Kirim Pesan Telegram</button>
+          <button type="submit" class="btn-save" style="flex: 1; padding: 11px 16px;">💾 Simpan Pengaturan Telegram</button>
+        </div>
+      </div>
+
+      <!-- TAB 3: BRANDING & AI -->
+      <div id="tab-brand" class="tab-pane">
+        <div class="form-group">
+          <label>Nama Brand / ISP / RT-RW Net:</label>
+          <input type="text" id="brand_name" name="brand_name" placeholder="ALIJAYA NET">
+          <div class="hint">Nama usaha yang akan tampil pada header pesan Telegram & WhatsApp.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Nomor Telepon / WhatsApp Customer Service:</label>
+          <input type="text" id="brand_phone" name="brand_phone" placeholder="081947215703">
+          <div class="hint">Nomor kontak layanan bantuan pada footer pesan.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Google Gemini API Key (Opsional):</label>
+          <input type="password" id="gemini_key" name="gemini_key" placeholder="AIzaSyDxxxxxxxxxxxxxxxxxxxx">
+          <div class="hint">Untuk asisten AI percakapan cerdas. Kosongkan jika tidak memakai.</div>
+        </div>
+      </div>
+
+      <!-- TAB 4: SISTEM & UPDATE -->
+      <div id="tab-update" class="tab-pane">
+        <div class="status-card" style="text-align: left; padding: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <span id="updateBadge" class="badge badge-open">MEMERIKSA VERSI...</span>
+              <p style="color: var(--text-muted); font-size: 0.84rem; margin-top: 4px;">Repositori: <b style="color: #00e5ff;">github.com/alijayanet/genieacs-multitab-mod</b></p>
+            </div>
+            <button type="button" id="btnCheckUpdate" class="btn-test" style="flex: 0 0 auto; padding: 8px 16px; border-radius: 6px;" onclick="checkSystemUpdate()">🔍 Cek Pembaruan</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;" class="version-grid">
+            <div style="background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; padding: 14px;">
+              <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Versi Server Ini (Lokal)</span>
+              <div style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 4px; font-family: monospace;" id="localCommit">-</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;" id="localDate">-</div>
+            </div>
+            <div style="background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; padding: 14px;">
+              <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Versi Terbaru (GitHub)</span>
+              <div style="font-size: 1.15rem; font-weight: 700; color: #00e5ff; margin-top: 4px; font-family: monospace;" id="remoteCommit">-</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;" id="remoteDate">-</div>
+            </div>
+          </div>
+
+          <div id="updateNoticeBox" style="background: rgba(4, 99, 128, 0.2); border: 1px solid #00e5ff; border-radius: 8px; padding: 14px; margin-bottom: 18px; display: none;">
+            <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #00e5ff; font-size: 0.95rem;">
+              ⚡ Pembaruan Baru Tersedia!
+            </div>
+            <p style="font-size: 0.85rem; color: #e2e8f0; margin-top: 6px;" id="updateNoticeMsg">-</p>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;" id="updateNoticeBehind"></p>
+          </div>
+
+          <div style="margin-top: 10px;">
+            <button type="button" id="btnApplyUpdate" class="btn-save" style="display: none; width: 100%; border-radius: 6px;" onclick="applySystemUpdate()">
+              🚀 Perbarui Sistem Sekarang (1-Click Update)
+            </button>
+          </div>
+
+          <!-- Terminal Log Box -->
+          <div id="updateLogWrapper" style="display: none; margin-top: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">📋 Log Proses Update:</span>
+              <span id="updateProgressText" style="font-size: 0.78rem; color: var(--primary);">Menjalankan proses...</span>
+            </div>
+            <div id="updateLogBox" style="background: #02040a; border: 1px solid var(--border); border-radius: 6px; padding: 12px; font-family: Consolas, 'Courier New', monospace; font-size: 0.8rem; color: #38bdf8; max-height: 200px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5;"></div>
+          </div>
+        </div>
+
+        <div style="background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 14px;">
+          <h4 style="font-size: 0.88rem; color: #f8fafc; margin-bottom: 6px;">ℹ️ Informasi Pembaruan</h4>
+          <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+            Fitur pembaruan ini akan secara otomatis menarik commit kode terbaru dari repositori GitHub, memperbarui modul backend & frontend GenieACS, dan me-restart service tanpa mengubah konfigurasi database MongoDB, token bot Telegram, maupun sesi WhatsApp yang sedang terhubung.
+          </p>
+        </div>
+      </div>
+
+      <div class="btn-row" id="saveBtnRow">
+        <button type="submit" class="btn-save">💾 Simpan Semua Pengaturan</button>
+      </div>
+    </form>
+
+    <div style="text-align: center;">
+      <a href="/" class="back-link" id="backToAcs">⬅️ Kembali ke Dashboard GenieACS</a>
+    </div>
+  </div>
+
+  <script>
+    if (window.self !== window.top) {
+      document.body.classList.add('in-iframe');
+    }
+    function botFetch(url, options) {
+      const prefix = window.location.pathname.startsWith('/bot-proxy') ? '/bot-proxy' : '';
+      const fullUrl = url.startsWith('/') ? prefix + url : prefix + '/' + url;
+      return fetch(fullUrl, options);
+    }
+    window.botFetch = botFetch;
+    document.getElementById('backToAcs').href = window.location.protocol + '//' + window.location.hostname + ':3000';
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      
+      const targetPane = document.getElementById(tabId);
+      if (targetPane) targetPane.classList.add('active');
+
+      if (typeof event !== 'undefined' && event && event.currentTarget && event.currentTarget.classList) {
+        event.currentTarget.classList.add('active');
+      } else {
+        const clickedBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').indexOf(tabId) !== -1);
+        if (clickedBtn) clickedBtn.classList.add('active');
+      }
+
+      const saveRow = document.getElementById('saveBtnRow');
+      if (saveRow) {
+        saveRow.style.display = (tabId === 'tab-update') ? 'none' : 'flex';
+      }
+
+      if (tabId === 'tab-update') {
+        checkSystemUpdate(true);
+      }
+    }
+    window.switchTab = switchTab;
+
+    async function checkSystemUpdate(silenceSuccess) {
+      const btn = document.getElementById('btnCheckUpdate');
+      const badge = document.getElementById('updateBadge');
+      if (btn) {
+        btn.textContent = '⏳ Memeriksa...';
+        btn.disabled = true;
+      }
+      try {
+        const res = await botFetch('/api/system/update_status');
+        const data = await res.json();
+        if (!data.success) {
+          showAlert('❌ ' + (data.error || 'Gagal memeriksa update'), false);
+          return;
+        }
+
+        document.getElementById('localCommit').textContent = data.local_commit || '-';
+        document.getElementById('localDate').textContent = 'Pembaruan: ' + (data.local_date || '-');
+        document.getElementById('remoteCommit').textContent = data.remote_commit || '-';
+        document.getElementById('remoteDate').textContent = 'Rilis: ' + (data.remote_date || '-');
+
+        const btnApply = document.getElementById('btnApplyUpdate');
+        const noticeBox = document.getElementById('updateNoticeBox');
+
+        if (data.has_update) {
+          badge.className = 'badge badge-qr';
+          badge.textContent = '⚡ UPDATE TERSEDIA (' + (data.commits_behind || 1) + ' COMMIT)';
+          noticeBox.style.display = 'block';
+          document.getElementById('updateNoticeMsg').textContent = 'Pesan Rilis: ' + (data.remote_msg || '-');
+          document.getElementById('updateNoticeBehind').textContent = 'Server ini tertinggal ' + (data.commits_behind || 1) + ' pembaruan dari GitHub.';
+          btnApply.style.display = 'flex';
+        } else {
+          badge.className = 'badge badge-open';
+          badge.textContent = '✅ SUDAH VERSI TERBARU';
+          noticeBox.style.display = 'none';
+          btnApply.style.display = 'none';
+          if (!silenceSuccess) {
+            showAlert('✅ Sistem Anda sudah menggunakan versi terbaru (' + data.local_commit + ').', true);
+          }
+        }
+      } catch (err) {
+        showAlert('❌ Gagal menghubungi server: ' + err.message, false);
+      } finally {
+        if (btn) {
+          btn.textContent = '🔍 Cek Pembaruan';
+          btn.disabled = false;
+        }
+      }
+    }
+    window.checkSystemUpdate = checkSystemUpdate;
+
+    async function applySystemUpdate() {
+      const confirmText = 'Apakah Anda yakin ingin memperbarui sistem ke versi terbaru dari GitHub?' + String.fromCharCode(10) + String.fromCharCode(10) + 'Service GenieACS akan direstart secara otomatis.';
+      if (!confirm(confirmText)) {
+        return;
+      }
+
+      const btnApply = document.getElementById('btnApplyUpdate');
+      const logWrapper = document.getElementById('updateLogWrapper');
+      const logBox = document.getElementById('updateLogBox');
+      const progressText = document.getElementById('updateProgressText');
+
+      btnApply.disabled = true;
+      btnApply.textContent = '🚀 Sedang Memperbarui...';
+      logWrapper.style.display = 'block';
+      logBox.textContent = 'Memulai proses update...' + String.fromCharCode(10);
+      progressText.textContent = 'Mengunduh dari GitHub...';
+
+      try {
+        const res = await botFetch('/api/system/update_apply', { method: 'POST' });
+        const data = await res.json();
+        if (data.logs) {
+          logBox.textContent = data.logs;
+        }
+        if (data.success) {
+          progressText.textContent = '✅ Berhasil!';
+          progressText.style.color = '#34d399';
+          showAlert('🎉 ' + data.message, true);
+          
+          let countdown = 6;
+          const interval = setInterval(() => {
+            countdown--;
+            progressText.textContent = 'Memuat ulang halaman dalam ' + countdown + ' detik...';
+            if (countdown <= 0) {
+              clearInterval(interval);
+              window.location.reload();
+            }
+          }, 1000);
+        } else {
+          progressText.textContent = '❌ Gagal';
+          progressText.style.color = '#f87171';
+          showAlert('❌ Gagal update: ' + (data.error || 'Terjadi kesalahan'), false);
+          btnApply.disabled = false;
+          btnApply.textContent = '🚀 Coba Perbarui Lagi';
+        }
+      } catch (err) {
+        logBox.textContent += String.fromCharCode(10) + 'Error: ' + err.message;
+        progressText.textContent = '⚠️ Service sedang restart...';
+        let countdown = 6;
+        const interval = setInterval(() => {
+          countdown--;
+          progressText.textContent = 'Service sedang restart. Memuat ulang dalam ' + countdown + ' detik...';
+          if (countdown <= 0) {
+            clearInterval(interval);
+            window.location.reload();
+          }
+        }, 1000);
+      }
+    }
+    window.applySystemUpdate = applySystemUpdate;
+
+    function showAlert(msg, isSuccess) {
+      const box = document.getElementById('alertBox');
+      box.textContent = msg;
+      box.className = 'alert ' + (isSuccess ? 'alert-success' : 'alert-error');
+      box.style.display = 'block';
+      box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => { box.style.display = 'none'; }, 6000);
+    }
+
+    // Load initial config
+    botFetch('/api/bot_config')
+      .then(res => {
+        if (!res.ok) throw new Error('Status: ' + res.status);
+        return res.json();
+      })
+      .then(data => {
+        document.getElementById('bot_enabled').value = data.enabled || 'true';
+        document.getElementById('bot_token').value = data.token || '';
+        document.getElementById('admin_id').value = data.admin_id || '';
+        document.getElementById('brand_name').value = data.brand_name || '';
+        document.getElementById('brand_phone').value = data.brand_phone || '';
+        document.getElementById('gemini_key').value = data.gemini_key || '';
+        document.getElementById('wa_enabled').value = data.wa_enabled !== undefined ? String(data.wa_enabled) : 'true';
+        document.getElementById('wa_admin_numbers').value = data.wa_admin_numbers || '';
+        document.getElementById('otp_enabled').value = data.otp_enabled !== undefined ? String(data.otp_enabled) : 'true';
+        document.getElementById('otp_expiry_minutes').value = data.otp_expiry_minutes || '5';
+        toggleOtpExpiryVisibility();
+      })
+      .catch(err => showAlert('❌ Gagal memuat konfigurasi: ' + err.message, false));
+
+    function toggleOtpExpiryVisibility() {
+      const sel = document.getElementById('otp_enabled');
+      const grp = document.getElementById('otpExpiryGroup');
+      if (sel && grp) {
+        grp.style.display = (sel.value === 'false') ? 'none' : 'block';
+      }
+    }
+    window.toggleOtpExpiryVisibility = toggleOtpExpiryVisibility;
+
+    // WhatsApp Live Status Polling
+    let pollInterval = null;
+    function updateWaStatus() {
+      botFetch('/api/whatsapp/status')
+        .then(res => res.json())
+        .then(data => {
+          const badge = document.getElementById('waBadge');
+          const connBox = document.getElementById('waConnectedBox');
+          const qrBox = document.getElementById('waQrBox');
+          const offBox = document.getElementById('waOfflineBox');
+
+          connBox.style.display = 'none';
+          qrBox.style.display = 'none';
+          offBox.style.display = 'none';
+
+          if (data.connection === 'open') {
+            badge.className = 'badge badge-open';
+            badge.textContent = '🟢 TERHUBUNG (ONLINE)';
+            connBox.style.display = 'block';
+            document.getElementById('waUser').textContent = data.user ? (data.user.name || data.user.id) : '-';
+          } else if (data.connection === 'qr') {
+            badge.className = 'badge badge-qr';
+            badge.textContent = '📷 MENUNGGU SCAN QR CODE';
+            qrBox.style.display = 'block';
+            if (data.qr) {
+              document.getElementById('waQrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(data.qr);
+            }
+          } else if (data.connection === 'connecting') {
+            badge.className = 'badge badge-connecting';
+            badge.textContent = '🔄 MENGHUBUNGKAN...';
+          } else {
+            badge.className = 'badge badge-disconnected';
+            badge.textContent = '🔴 TERPUTUS (OFFLINE)';
+            offBox.style.display = 'block';
+          }
+        })
+        .catch(() => {
+          const badge = document.getElementById('waBadge');
+          badge.className = 'badge badge-disconnected';
+          badge.textContent = '🔴 SERVICE OFFLINE';
+          document.getElementById('waConnectedBox').style.display = 'none';
+          document.getElementById('waQrBox').style.display = 'none';
+          document.getElementById('waOfflineBox').style.display = 'block';
+        });
+    }
+
+    updateWaStatus();
+    pollInterval = setInterval(updateWaStatus, 3000);
+
+    function logoutWA() {
+      if (confirm('Yakin ingin memutuskan koneksi WhatsApp bot?')) {
+        botFetch('/api/whatsapp/logout', { method: 'POST' })
+          .then(res => res.json())
+          .then(d => {
+            showAlert('Sesi WhatsApp berhasil diputus', true);
+            updateWaStatus();
+          })
+          .catch(err => showAlert('❌ Gagal logout WhatsApp: ' + err.message, false));
+      }
+    }
+    window.logoutWA = logoutWA;
+
+    function resetWA() {
+      const confirmReset = '⚠️ PERHATIAN:' + String.fromCharCode(10) + String.fromCharCode(10) + 'Tindakan ini akan menghapus sesi WhatsApp bot di server dan membuat ulang QR Code.' + String.fromCharCode(10) + String.fromCharCode(10) + 'Apakah Anda yakin ingin melanjutkan?';
+      if (confirm(confirmReset)) {
+        const btn = document.querySelector('.btn-reset-wa');
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = '⏳ Menghapus sesi WhatsApp...';
+        }
+        botFetch('/api/whatsapp/reset', { method: 'POST' })
+          .then(res => res.json())
+          .then(d => {
+            showAlert('✅ ' + (d.message || 'Sesi WhatsApp berhasil dihapus. Silakan tunggu QR Code baru.'), true);
+            setTimeout(updateWaStatus, 2000);
+          })
+          .catch(err => showAlert('❌ Gagal reset WhatsApp: ' + err.message, false))
+          .finally(() => {
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = '🗑️ Hapus Sesi WhatsApp (Ganti Nomor Bot / Buat QR Baru)';
+            }
+          });
+      }
+    }
+    window.resetWA = resetWA;
+
+    // Handle Form Submit
+    document.getElementById('botForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const payload = {
+        enabled: document.getElementById('bot_enabled').value,
+        token: document.getElementById('bot_token').value,
+        admin_id: document.getElementById('admin_id').value,
+        brand_name: document.getElementById('brand_name').value,
+        brand_phone: document.getElementById('brand_phone').value,
+        gemini_key: document.getElementById('gemini_key').value,
+        wa_enabled: document.getElementById('wa_enabled').value,
+        wa_admin_numbers: document.getElementById('wa_admin_numbers').value,
+        otp_enabled: document.getElementById('otp_enabled').value,
+        otp_expiry_minutes: document.getElementById('otp_expiry_minutes').value
+      };
+
+      botFetch('/api/bot_config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showAlert('✅ Konfigurasi Bot berhasil disimpan!', true);
+        } else {
+          showAlert('❌ ' + (data.message || 'Gagal menyimpan konfigurasi'), false);
+        }
+      })
+      .catch(err => showAlert('❌ Error: ' + err.message, false));
+    });
+
+    // Test Telegram message
+    document.getElementById('btnTest').addEventListener('click', function() {
+      const token = document.getElementById('bot_token').value.trim();
+      const adminId = document.getElementById('admin_id').value.trim();
+
+      if (!token || !adminId) {
+        showAlert('⚠️ Harap isi Token Bot dan Admin Chat ID terlebih dahulu!', false);
+        return;
+      }
+
+      this.textContent = '⏳ Mengirim pesan...';
+      this.disabled = true;
+
+      const targetId = adminId.split(',')[0].trim();
+      const testMsg = '🔔 *TES NOTIFIKASI GENIEACS BOT*' + String.fromCharCode(10) + String.fromCharCode(10) + 'Koneksi bot Telegram ALIJAYA NET berhasil terhubung dengan server!';
+      const tgUrl = 'https://api.telegram.org/bot' + token + '/sendMessage?chat_id=' + targetId + '&text=' + encodeURIComponent(testMsg) + '&parse_mode=Markdown';
+
+      fetch(tgUrl)
+      .then(res => res.json())
+      .then(res => {
+        if (res.ok) {
+          showAlert('✅ Pesan tes Telegram berhasil terkirim ke ' + targetId + '! Menyimpan pengaturan ke server...', true);
+          try {
+            const submitEvent = new Event('submit', { cancelable: true });
+            document.getElementById('botForm').dispatchEvent(submitEvent);
+          } catch (_) {}
+        } else {
+          showAlert('❌ Gagal kirim Telegram: ' + (res.description || 'Unknown error'), false);
+        }
+      })
+      .catch(err => showAlert('❌ Error: ' + err.message, false))
+      .finally(() => {
+        this.textContent = '🧪 Tes Kirim Pesan Telegram';
+        this.disabled = false;
+      });
+    });
+
+    async function handleAdminLogout() {
+      if (confirm("Apakah Anda yakin ingin logout dari halaman pengaturan Bot?")) {
+        try {
+          await botFetch('/api/logout', { method: 'POST' });
+        } catch (_) {}
+        window.location.reload();
+      }
+    }
+    window.handleAdminLogout = handleAdminLogout;
+  </script>
+</body>
+</html>
