@@ -468,6 +468,17 @@ upgrade_existing_server() {
     fi
     node "${FILES_DIR}/seed-mongo.js" "${mongo_conn}" "${g_dir}" || log_warn "Seeding database dilewati (data yang ada tetap aman)."
 
+    # Siapkan direktori repo untuk fitur Cek & Terapkan Update di Web UI (/bot)
+    git config --system --add safe.directory "*" 2>/dev/null || true
+    if [[ "$SCRIPT_DIR" != "/opt/genieacs-multitab" && ! -d "/opt/genieacs-multitab/.git" ]]; then
+        log_info "Menyiapkan direktori pembaruan sistem di /opt/genieacs-multitab..."
+        mkdir -p /opt/genieacs-multitab
+        cp -rf "${SCRIPT_DIR}/"* /opt/genieacs-multitab/ 2>/dev/null || true
+        cp -rf "${SCRIPT_DIR}/.git" /opt/genieacs-multitab/ 2>/dev/null || true
+        chown -R genieacs:genieacs /opt/genieacs-multitab 2>/dev/null || true
+        chmod -R 775 /opt/genieacs-multitab 2>/dev/null || true
+    fi
+
     # 10. Restart UI service
     log_info "Merestart layanan genieacs-ui..."
     systemctl restart genieacs-ui
