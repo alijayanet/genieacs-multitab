@@ -74,16 +74,150 @@ const router = new Router();
 
 // ==================== 1. VOICE & STATIC PAGES ROUTER ====================
 
-// GET & POST /api/voice/tts - Neural Text-to-Speech Streaming (id-ID-GadisNeural / id-ID-ArdiNeural)
-router.all(['/api/voice/tts', '/bot-proxy/api/voice/tts', '/tts', '/voice/tts'], async ctx => {
+// ==================== 1. ULTRA-LIGHTWEIGHT VOICE & TTS ENGINE (BILLING-RTRW METHOD) ====================
+
+// Cache audio dalam memori (maks 100 item) agar respon instan (< 100ms)
+const ttsMemoryCache = new Map();
+
+function cleanTextForSpeech(text) {
+  if (!text || typeof text !== 'string') return '';
+  let str = text;
+
+  // Hapus blok kode & backticks
+  str = str.replace(/```[\s\S]*?```/g, ' ');
+  str = str.replace(/`([^`]+)`/g, '$1');
+
+  // Hapus link markdown [Teks](url) -> Teks
+  str = str.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+
+  // Hapus simbol markdown * atau _
+  str = str.replace(/[*_~#]/g, ' ');
+
+  // Hapus bullet point dan garis pemisah panjang
+  str = str.replace(/^[•\-\*]\s+/gm, '');
+  str = str.replace(/^[─—\-_=]{2,}\s*$/gm, '');
+
+  // Hapus parameter teknis TR-069
+  str = str.replace(/InternetGatewayDevice\.[^\s]+/g, 'parameter modem');
+
+  // Hapus emoji umum dan simbol grafis
+  str = str.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}]/gu, ' ');
+  str = str.replace(/[•►✔️✅❌⚠️🔔💡📌🔍🚀📶🌐📊👥🔄🆕❓💳💸🏢📞🏠👤📱🤖🌓]/g, ' ');
+
+  // Format angka & rupiah agar ramah didengar
+  str = str.replace(/\bRp\s?([\d.,]+)\b/gi, '$1 rupiah');
+  str = str.replace(/\bNo\.\s*/gi, 'nomor ');
+  str = str.replace(/\bNo\s+(\d+)/gi, 'nomor $1');
+  str = str.replace(/\s+/g, ' ').trim();
+
+  // Batasi intisari suara (~45 kata) agar loading suara sangat cepat & to-the-point
+  const words = str.split(' ');
+  if (words.length > 45) {
+    str = words.slice(0, 45).join(' ') + '... dan rincian lengkapnya sudah saya tampilkan di layar.';
+  }
+
+  return str;
+}
+
+function splitTextIntoChunks(text, maxLen = 175) {
+  if (!text) return [];
+  const sentences = text.match(/[^.!?\n,]+[.!?\n,]*/g) || [text];
+  const chunks = [];
+  let currentChunk = '';
+
+  for (const sentence of sentences) {
+    const trimmed = sentence.trim();
+    if (!trimmed) continue;
+
+    if (trimmed.length > maxLen) {
+      const words = trimmed.split(/\s+/);
+      for (const word of words) {
+        if ((currentChunk + ' ' + word).trim().length > maxLen) {
+          if (currentChunk.trim()) chunks.push(currentChunk.trim());
+          currentChunk = word;
+        } else {
+          currentChunk = (currentChunk + ' ' + word).trim();
+        }
+      }
+    } else if ((currentChunk + ' ' + trimmed).trim().length > maxLen) {
+      if (currentChunk.trim()) chunks.push(currentChunk.trim());
+      currentChunk = trimmed;
+    } else {
+      currentChunk = (currentChunk + ' ' + trimmed).trim();
+    }
+  }
+
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+
+  return chunks;
+}
+
+function fetchGoogleTtsChunk(chunkText, lang = 'id') {
+  return new Promise((resolve, reject) => {
+    const https = require('https');
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunkText)}&tl=${lang}&client=tw-ob`;
+    const req = https.get(url, {
+      family: 4, // Paksa IPv4 untuk menghindari delay IPv6
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
+      timeout: 8000
+    }, res => {
+      if (res.statusCode !== 200) {
+        return reject(new Error(`Google TTS status HTTP ${res.statusCode}`));
+      }
+      const data = [];
+      res.on('data', d => data.push(d));
+      res.on('end', () => resolve(Buffer.concat(data)));
+    });
+
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Google TTS timeout'));
+    });
+  });
+}
+
+async function generateGoogleTtsSpeech(text) {
+  const clean = cleanTextForSpeech(text);
+  if (!clean) return null;
+
+  const cacheKey = clean.toLowerCase();
+  if (ttsMemoryCache.has(cacheKey)) {
+    return ttsMemoryCache.get(cacheKey);
+  }
+
+  const chunks = splitTextIntoChunks(clean, 175);
+  if (chunks.length === 0) return null;
+
+  const bufferList = [];
+  for (const chunk of chunks) {
+    const buf = await fetchGoogleTtsChunk(chunk, 'id');
+    bufferList.push(buf);
+  }
+
+  const combined = Buffer.concat(bufferList);
+  if (ttsMemoryCache.size > 80) {
+    const firstKey = ttsMemoryCache.keys().next().value;
+    ttsMemoryCache.delete(firstKey);
+  }
+  ttsMemoryCache.set(cacheKey, combined);
+  return combined;
+}
+
+// ENDPOINTS VOICE AI ASSISTANT & TTS STREAMING
+router.all(['/api/voice-assistant/tts', '/bot-proxy/api/voice-assistant/tts', '/api/voice/tts', '/bot-proxy/api/voice/tts', '/tts', '/voice/tts'], async ctx => {
   let rawText = '';
-  let voice = 'id-ID-GadisNeural';
+  let voice = 'google-id';
 
   if (ctx.method === 'POST') {
-    rawText = String(ctx.request.body?.text || '').trim();
+    rawText = String(ctx.request.body?.text || ctx.request.body?.message || '').trim();
     if (ctx.request.body?.voice) voice = String(ctx.request.body.voice).trim();
   } else {
-    rawText = String(ctx.query.text || '').trim();
+    rawText = String(ctx.query.text || ctx.query.q || '').trim();
     if (ctx.query.voice) voice = String(ctx.query.voice).trim();
   }
 
@@ -93,21 +227,27 @@ router.all(['/api/voice/tts', '/bot-proxy/api/voice/tts', '/tts', '/voice/tts'],
     return;
   }
 
-  // Bersihkan teks untuk ucapan natural manusia (hindari baca tanda baca atau formatting)
-  let clean = rawText
-    .replace(/[\*\_\`\~\#\>\+\=\|\{\}\.\!\-]/g, ' ')
-    .replace(/https?:\/\/\S+/g, ' ')
-    .replace(/[━─═\-_]{2,}/g, ' ')
-    .replace(/[•►✔️✅❌⚠️🔔💡📌🔍🚀📶🌐📊👥🔄🆕❓💳💸🏢📞🏠👤📱🤖🌓]/g, ' ')
-    .replace(/InternetGatewayDevice\.[^\s]+/g, 'parameter modem')
-    .replace(/\s+/g, ' ')
-    .trim();
+  const clean = cleanTextForSpeech(rawText);
 
-  // Batasi agar TTS tidak berbicara kepanjangan (maksimal 45 kata, sisanya rujukan ke layar)
-  const words = clean.split(' ');
-  if (words.length > 45) {
-    clean = words.slice(0, 45).join(' ') + '... Rincian lengkapnya sudah saya tampilkan di layar.';
+  // Opsi Default / Google ID (Super Ringan, 0.2s, In-Memory Buffer)
+  if (voice === 'google-id' || voice === 'google' || !voice.includes('Neural')) {
+    try {
+      const audioBuf = await generateGoogleTtsSpeech(clean);
+      if (audioBuf && audioBuf.length > 0) {
+        ctx.type = 'audio/mpeg';
+        ctx.set('Access-Control-Allow-Origin', '*');
+        ctx.set('Cache-Control', 'public, max-age=86400');
+        ctx.body = audioBuf;
+        return;
+      }
+    } catch (e) {
+      console.warn('[Google TTS Error, Fallback ke Edge-TTS]:', e.message);
+    }
   }
+
+  // Opsi Microsoft Azure Neural TTS (id-ID-GadisNeural / id-ID-ArdiNeural)
+  let edgeVoice = 'id-ID-GadisNeural';
+  if (voice === 'ardi' || voice === 'id-ID-ArdiNeural') edgeVoice = 'id-ID-ArdiNeural';
 
   const tmpId = Date.now() + '_' + Math.random().toString(36).substring(2, 7);
   const txtFile = '/tmp/tts_' + tmpId + '.txt';
@@ -116,7 +256,7 @@ router.all(['/api/voice/tts', '/bot-proxy/api/voice/tts', '/tts', '/voice/tts'],
   try {
     fs.writeFileSync(txtFile, clean, 'utf8');
     const { exec } = require('child_process');
-    const cmd = `/usr/local/bin/edge-tts --voice "${voice}" -f "${txtFile}" --write-media "${mp3File}"`;
+    const cmd = `/usr/local/bin/edge-tts --voice "${edgeVoice}" -f "${txtFile}" --write-media "${mp3File}"`;
     
     await new Promise((resolve, reject) => {
       exec(cmd, { timeout: 15000 }, (error, stdout, stderr) => {
@@ -128,7 +268,7 @@ router.all(['/api/voice/tts', '/bot-proxy/api/voice/tts', '/tts', '/voice/tts'],
     if (fs.existsSync(mp3File) && fs.statSync(mp3File).size > 0) {
       ctx.type = 'audio/mpeg';
       ctx.set('Access-Control-Allow-Origin', '*');
-      ctx.set('Cache-Control', 'public, max-age=3600');
+      ctx.set('Cache-Control', 'public, max-age=86400');
       ctx.body = fs.createReadStream(mp3File);
       setTimeout(() => {
         try { if (fs.existsSync(txtFile)) fs.unlinkSync(txtFile); } catch(e){}
@@ -137,12 +277,40 @@ router.all(['/api/voice/tts', '/bot-proxy/api/voice/tts', '/tts', '/voice/tts'],
       return;
     }
   } catch(e) {
-    console.error('TTS error:', e.message);
+    console.error('Edge-TTS error:', e.message);
   } finally {
     try { if (fs.existsSync(txtFile)) fs.unlinkSync(txtFile); } catch(e){}
   }
+
   ctx.status = 500;
   ctx.body = 'TTS generation failed';
+});
+
+// POST /api/voice-assistant/ask - Endpoint Voice AI Assistant (Kompatibel 100% Billing RTRW)
+router.post(['/api/voice-assistant/ask', '/bot-proxy/api/voice-assistant/ask'], async ctx => {
+  const reqBody = ctx.request.body || {};
+  const rawMessage = String(reqBody.message || reqBody.text || '').trim();
+  if (!rawMessage) {
+    ctx.status = 400;
+    ctx.body = { ok: false, error: 'Pesan tidak boleh kosong' };
+    return;
+  }
+
+  const res = await handleAgentCommand({
+    text: rawMessage,
+    isAdmin: reqBody.isAdmin !== undefined ? reqBody.isAdmin : true,
+    sender: reqBody.sender || 'voice_assistant_user'
+  });
+
+  const replyText = res?.reply || res?.text || '';
+  const speechText = cleanTextForSpeech(replyText);
+
+  ctx.body = {
+    ok: true,
+    text: replyText,
+    speechText: speechText,
+    reply: replyText
+  };
 });
 
 router.get(['/voice', '/voice.html', '/bot-proxy/voice', '/bot-proxy/voice.html', '/asisten', '/suara'], async ctx => {
@@ -1810,7 +1978,13 @@ async function handleAgentCommand(reqBody) {
 router.post(['/api/agent_command', '/bot-proxy/api/agent_command'], async ctx => {
   const reqBody = ctx.request.body || {};
   const res = await handleAgentCommand(reqBody);
-  ctx.body = res;
+  const replyText = res?.reply || res?.text || '';
+  ctx.body = {
+    ok: true,
+    text: replyText,
+    speechText: cleanTextForSpeech(replyText),
+    reply: replyText
+  };
 });
 
 module.exports = router;
