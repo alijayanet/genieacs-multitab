@@ -72,7 +72,7 @@ function formatDate(d = new Date()) {
 
 const router = new Router();
 
-// ==================== 1. STATIC PAGES ROUTER ====================
+// ==================== 1. VOICE & STATIC PAGES ROUTER ====================
 
 router.get(['/peta', '/peta.html', '/bot-proxy/peta'], async ctx => {
   const file = path.join(PUBLIC_DIR, 'peta.html');
