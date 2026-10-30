@@ -74,6 +74,71 @@ const router = new Router();
 
 // ==================== 1. VOICE & STATIC PAGES ROUTER ====================
 
+// GET /api/voice/tts - Neural Text-to-Speech Streaming (id-ID-GadisNeural / id-ID-ArdiNeural)
+router.get(['/api/voice/tts', '/bot-proxy/api/voice/tts', '/tts', '/voice/tts'], async ctx => {
+  const rawText = String(ctx.query.text || '').trim();
+  const voice = String(ctx.query.voice || 'id-ID-GadisNeural').trim();
+  if (!rawText) {
+    ctx.status = 400;
+    ctx.body = 'Missing text parameter';
+    return;
+  }
+
+  // Bersihkan teks untuk ucapan natural manusia
+  let clean = rawText
+    .replace(/[\*\_\`\~\#\>\+\=\|\{\}\.\!\-]/g, ' ')
+    .replace(/https?:\/\/\S+/g, ' ')
+    .replace(/[━─═\-_]{2,}/g, ' ')
+    .replace(/[•►✔️✅❌⚠️🔔💡📌🔍🚀📶🌐📊👥🔄🆕❓💳💸🏢📞🏠👤📱🤖🌓]/g, ' ')
+    .replace(/InternetGatewayDevice\.[^\s]+/g, 'parameter modem')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const words = clean.split(' ');
+  if (words.length > 70) {
+    clean = words.slice(0, 70).join(' ') + ' dan rincian lengkapnya sudah tampil di layar.';
+  }
+
+  const tmpId = Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+  const mp3File = '/tmp/tts_' + tmpId + '.mp3';
+  try {
+    const { exec } = require('child_process');
+    const safeText = clean.replace(/"/g, '\\"');
+    const cmd = `/usr/local/bin/edge-tts --voice "${voice}" --text "${safeText}" --write-media "${mp3File}"`;
+    
+    await new Promise((resolve, reject) => {
+      exec(cmd, { timeout: 15000 }, (error, stdout, stderr) => {
+        if (error) return reject(error);
+        resolve(stdout);
+      });
+    });
+
+    if (fs.existsSync(mp3File) && fs.statSync(mp3File).size > 0) {
+      ctx.type = 'audio/mpeg';
+      ctx.set('Access-Control-Allow-Origin', '*');
+      ctx.set('Cache-Control', 'public, max-age=3600');
+      ctx.body = fs.createReadStream(mp3File);
+      setTimeout(() => { try { if (fs.existsSync(mp3File)) fs.unlinkSync(mp3File); } catch(e){} }, 60000);
+      return;
+    }
+  } catch(e) {
+    console.error('TTS error:', e.message);
+  }
+  ctx.status = 500;
+  ctx.body = 'TTS generation failed';
+});
+
+router.get(['/voice', '/voice.html', '/bot-proxy/voice', '/bot-proxy/voice.html', '/asisten', '/suara'], async ctx => {
+  const file = path.join(PUBLIC_DIR, 'voice.html');
+  if (fs.existsSync(file)) {
+    ctx.type = 'text/html; charset=utf-8';
+    ctx.body = fs.createReadStream(file);
+  } else {
+    ctx.status = 404;
+    ctx.body = '<h3>File voice.html belum tersedia</h3>';
+  }
+});
+
 router.get(['/peta', '/peta.html', '/bot-proxy/peta'], async ctx => {
   const file = path.join(PUBLIC_DIR, 'peta.html');
   if (fs.existsSync(file)) {
