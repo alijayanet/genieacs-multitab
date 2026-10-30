@@ -74,17 +74,26 @@ const router = new Router();
 
 // ==================== 1. VOICE & STATIC PAGES ROUTER ====================
 
-// GET /api/voice/tts - Neural Text-to-Speech Streaming (id-ID-GadisNeural / id-ID-ArdiNeural)
-router.get(['/api/voice/tts', '/bot-proxy/api/voice/tts', '/tts', '/voice/tts'], async ctx => {
-  const rawText = String(ctx.query.text || '').trim();
-  const voice = String(ctx.query.voice || 'id-ID-GadisNeural').trim();
+// GET & POST /api/voice/tts - Neural Text-to-Speech Streaming (id-ID-GadisNeural / id-ID-ArdiNeural)
+router.all(['/api/voice/tts', '/bot-proxy/api/voice/tts', '/tts', '/voice/tts'], async ctx => {
+  let rawText = '';
+  let voice = 'id-ID-GadisNeural';
+
+  if (ctx.method === 'POST') {
+    rawText = String(ctx.request.body?.text || '').trim();
+    if (ctx.request.body?.voice) voice = String(ctx.request.body.voice).trim();
+  } else {
+    rawText = String(ctx.query.text || '').trim();
+    if (ctx.query.voice) voice = String(ctx.query.voice).trim();
+  }
+
   if (!rawText) {
     ctx.status = 400;
     ctx.body = 'Missing text parameter';
     return;
   }
 
-  // Bersihkan teks untuk ucapan natural manusia
+  // Bersihkan teks untuk ucapan natural manusia (hindari baca tanda baca atau formatting)
   let clean = rawText
     .replace(/[\*\_\`\~\#\>\+\=\|\{\}\.\!\-]/g, ' ')
     .replace(/https?:\/\/\S+/g, ' ')
@@ -94,17 +103,20 @@ router.get(['/api/voice/tts', '/bot-proxy/api/voice/tts', '/tts', '/voice/tts'],
     .replace(/\s+/g, ' ')
     .trim();
 
+  // Batasi agar TTS tidak berbicara kepanjangan (maksimal 45 kata, sisanya rujukan ke layar)
   const words = clean.split(' ');
-  if (words.length > 70) {
-    clean = words.slice(0, 70).join(' ') + ' dan rincian lengkapnya sudah tampil di layar.';
+  if (words.length > 45) {
+    clean = words.slice(0, 45).join(' ') + '... Rincian lengkapnya sudah saya tampilkan di layar.';
   }
 
   const tmpId = Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+  const txtFile = '/tmp/tts_' + tmpId + '.txt';
   const mp3File = '/tmp/tts_' + tmpId + '.mp3';
+
   try {
+    fs.writeFileSync(txtFile, clean, 'utf8');
     const { exec } = require('child_process');
-    const safeText = clean.replace(/"/g, '\\"');
-    const cmd = `/usr/local/bin/edge-tts --voice "${voice}" --text "${safeText}" --write-media "${mp3File}"`;
+    const cmd = `/usr/local/bin/edge-tts --voice "${voice}" -f "${txtFile}" --write-media "${mp3File}"`;
     
     await new Promise((resolve, reject) => {
       exec(cmd, { timeout: 15000 }, (error, stdout, stderr) => {
@@ -118,11 +130,16 @@ router.get(['/api/voice/tts', '/bot-proxy/api/voice/tts', '/tts', '/voice/tts'],
       ctx.set('Access-Control-Allow-Origin', '*');
       ctx.set('Cache-Control', 'public, max-age=3600');
       ctx.body = fs.createReadStream(mp3File);
-      setTimeout(() => { try { if (fs.existsSync(mp3File)) fs.unlinkSync(mp3File); } catch(e){} }, 60000);
+      setTimeout(() => {
+        try { if (fs.existsSync(txtFile)) fs.unlinkSync(txtFile); } catch(e){}
+        try { if (fs.existsSync(mp3File)) fs.unlinkSync(mp3File); } catch(e){}
+      }, 60000);
       return;
     }
   } catch(e) {
     console.error('TTS error:', e.message);
+  } finally {
+    try { if (fs.existsSync(txtFile)) fs.unlinkSync(txtFile); } catch(e){}
   }
   ctx.status = 500;
   ctx.body = 'TTS generation failed';
@@ -1397,46 +1414,101 @@ async function formatUnconfiguredOnts(database) {
   ].join('\n');
 }
 
-async function callGeminiAi(apiKey, userPrompt, brandName, brandPhone) {
+async function callGeminiAi(apiKey, userPrompt, brandName, brandPhone, database, isAdmin, sender) {
   const https = require('https');
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-  const systemInstruction = `Kamu adalah Customer Service dan Asisten IT AI ramah untuk ISP/RT-RW Net bernama "${brandName}". Kontak bantuan CS: ${brandPhone}. Jawab secara singkat, ramah, dan solutif dalam bahasa Indonesia. Jika pelanggan bertanya tentang gangguan internet, sarankan mengecek lampu indikator modem (LOS/PON/Internet) atau mencoba restart modem dengan mengetik "reboot". Jangan berikan informasi teknis internal server yang sensitif.`;
+  const models = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest'];
 
-  const payload = {
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: `${systemInstruction}\n\nPertanyaan/Pesan Pengguna: ${userPrompt}` }]
-      }
-    ]
-  };
+  // 1. Kumpulkan Context Realtime Host Server Linux STB Armbian
+  let serverContext = '';
+  try {
+    const { execSync } = require('child_process');
+    const uptime = execSync('uptime -p 2>/dev/null || uptime').toString().trim();
+    const mem = execSync("free -m | awk 'NR==2{printf \"%s/%sMB (%.1f%%)\", $3,$2,$3*100/$2}' 2>/dev/null").toString().trim();
+    let temp = 'Normal';
+    try {
+      const rawTemp = parseInt(fs.readFileSync('/sys/class/thermal/thermal_zone0/temp', 'utf8').trim());
+      temp = (rawTemp / (rawTemp > 1000 ? 1000 : 1)).toFixed(1) + '°C';
+    } catch(e){}
+    const disk = execSync("df -h / | awk 'NR==2{printf \"%s/%s (%s)\", $3,$2,$5}' 2>/dev/null").toString().trim();
+    serverContext = `[STATUS REALTIME SERVER STB]\n- Uptime: ${uptime}\n- RAM Terpakai: ${mem}\n- Suhu CPU STB: ${temp}\n- Penyimpanan Root: ${disk}\n`;
+  } catch(e){}
 
-  return new Promise(resolve => {
-    const parsed = new URL(url);
-    const req = https.request({
-      hostname: parsed.hostname,
-      path: parsed.pathname + parsed.search,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 10000
-    }, res => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(data);
-          const replyText = json.candidates?.[0]?.content?.parts?.[0]?.text;
-          resolve(replyText || null);
-        } catch (e) {
-          resolve(null);
-        }
+  // 2. Kumpulkan Context Realtime Database GenieACS TR-069
+  let genieContext = '';
+  try {
+    if (database) {
+      const totalDevs = await database.collection('devices').countDocuments({});
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+      const onlineDevs = await database.collection('devices').countDocuments({ _lastInform: { $gte: fiveMinAgo } });
+      const offlineDevs = Math.max(0, totalDevs - onlineDevs);
+      genieContext = `[DATA REALTIME GENIEACS TR-069]\n- Total Modem Terdaftar: ${totalDevs}\n- Modem Online: ${onlineDevs}\n- Modem Offline: ${offlineDevs}\n`;
+    }
+  } catch(e){}
+
+  const systemInstruction = [
+    `Anda adalah Asisten Pintar Resmi ALIJAYA NET (Layanan Internet WiFi & TR-069 GenieACS).`,
+    `Kontak WhatsApp CS: ${brandPhone}.`,
+    `Kemampuan & Karakter Anda:`,
+    `- Anda adalah asisten percakapan cerdas yang ramah, sopan, luwes, dan solutif dalam bahasa Indonesia.`,
+    `- Anda BUKAN robot yang kaku atau terpaku pada perintah tertentu saja. Anda bisa diajak mengobrol santai mengenai TOPIK APA SAJA (sapaan, tanya kabar, cerita, tips teknologi, pertanyaan umum, dsb).`,
+    `- Ketika pengguna bertanya mengenai kondisi server STB, kendala internet, modem pelanggan, atau sistem GenieACS TR-069, jawablah secara detail dan akurat berdasarkan DATA REAL SERVER berikut:`,
+    serverContext,
+    genieContext,
+    `- Berikan jawaban yang alami dan menyenangkan, seolah-olah mengobrol langsung dengan manusia.`,
+    `- Jika pengguna ingin melakukan tindakan langsung pada modem (reboot, ganti wifi, cek redaman), beritahukan perintah praktisnya (misal: cek <user>, reboot <user>, redaman).`
+  ].join('\n');
+
+  for (const model of models) {
+    try {
+      const reply = await new Promise(resolve => {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const parsed = new URL(url);
+        const payload = JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: `${systemInstruction}\n\nPertanyaan/Pesan Pengguna: ${userPrompt}` }]
+            }
+          ]
+        });
+
+        const req = https.request({
+          hostname: parsed.hostname,
+          path: parsed.pathname + parsed.search,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(payload)
+          },
+          timeout: 10000
+        }, res => {
+          let data = '';
+          res.on('data', chunk => data += chunk);
+          res.on('end', () => {
+            if (res.statusCode === 200) {
+              try {
+                const json = JSON.parse(data);
+                const txt = json.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (txt) return resolve(txt.trim());
+              } catch(e){}
+            }
+            resolve(null);
+          });
+        });
+
+        req.on('error', () => resolve(null));
+        req.on('timeout', () => { req.destroy(); resolve(null); });
+        req.write(payload);
+        req.end();
       });
-    });
-    req.on('error', () => resolve(null));
-    req.on('timeout', () => { req.destroy(); resolve(null); });
-    req.write(JSON.stringify(payload));
-    req.end();
-  });
+
+      if (reply) return reply;
+    } catch(err) {
+      console.warn(`Model ${model} gagal:`, err.message);
+    }
+  }
+
+  return null;
 }
 
 async function handleAgentCommand(reqBody) {
@@ -1724,7 +1796,7 @@ async function handleAgentCommand(reqBody) {
 
   // 12. Fallback to Gemini AI if configured
   if (geminiKey) {
-    const aiResponse = await callGeminiAi(geminiKey, rawText, brandName, brandPhone);
+    const aiResponse = await callGeminiAi(geminiKey, rawText, brandName, brandPhone, database, isAdmin, sender);
     if (aiResponse) return { reply: aiResponse };
   }
 
