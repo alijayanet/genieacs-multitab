@@ -787,7 +787,7 @@
   <audio id="ttsAudioPlayer" style="display:none;"></audio>
 
   <script>
-    // STATE MANAGEMENT (METODE BILLING-RTRW - ZERO LOOPING)
+    // STATE MANAGEMENT (METODE BILLING-RTRW - ZERO LOOPING & ZERO REDUNDANCY)
     let isInCall = false;
     let isHandsfree = true; // Mode telepon otomatis
     let isAudioMuted = false;
@@ -795,6 +795,8 @@
     let recognition = null;
     let isAiSpeaking = false;
     let isRecognizing = false;
+    let isProcessing = false;
+    let workingApiPrefix = null; // Caches '' (STB 185) or '/bot-proxy' (STB 89)
     let audioContext = null;
     let analyser = null;
     let animFrameId = null;
@@ -1029,120 +1031,159 @@
       isRecognizing = false;
     }
 
-    // PROSES PERTANYAAN USER (API CALL)
+    // PROSES PERTANYAAN USER (API CALL - ZERO LOOPING & MUTEX GUARD)
     async function handleUserSpoken(questionText) {
-      if (!questionText) return;
+      if (!questionText || isProcessing || isAiSpeaking) return;
+      isProcessing = true;
 
-      // LANGKAH PENTING: Langsung matikan mic selama AI berpikir & menjawab
+      // LANGKAH PENTING: Langsung matikan mic & hentikan suara lama
       stopListening();
+      stopAudioPlayback();
       setOrbState('thinking');
 
       appendChatBubble('user', questionText);
 
-      const endpoints = [
-        '/api/voice-assistant/ask',
-        '/bot-proxy/api/voice-assistant/ask',
-        '/api/agent_command',
-        '/bot-proxy/api/agent_command'
-      ];
+      // Urutan kandidat endpoint: prioritaskan prefix yang sudah terverifikasi
+      const endpoints = workingApiPrefix !== null
+        ? [`${workingApiPrefix}/api/voice-assistant/ask`, `${workingApiPrefix}/api/agent_command`]
+        : [
+            '/api/voice-assistant/ask',
+            '/bot-proxy/api/voice-assistant/ask',
+            '/api/agent_command',
+            '/bot-proxy/api/agent_command'
+          ];
 
       let replyText = '';
       let speechText = '';
       let success = false;
 
-      for (const ep of endpoints) {
-        try {
-          const res = await fetch(ep, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              message: questionText,
-              text: questionText,
-              isAdmin: true,
-              sender: 'voice_web_user'
-            })
-          });
+      try {
+        for (const ep of endpoints) {
+          try {
+            const res = await fetch(ep, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                message: questionText,
+                text: questionText,
+                isAdmin: true,
+                sender: 'voice_web_user'
+              })
+            });
 
-          if (res.ok) {
-            const data = await res.json();
-            replyText = data.text || data.reply || '';
-            speechText = data.speechText || replyText;
-            success = true;
-            break;
+            if (res.ok) {
+              const data = await res.json();
+              replyText = data.text || data.reply || '';
+              speechText = data.speechText || replyText;
+              success = true;
+              workingApiPrefix = ep.startsWith('/bot-proxy') ? '/bot-proxy' : '';
+              break;
+            }
+          } catch (e) {
+            console.warn(`Endpoint ${ep} gagal:`, e);
           }
-        } catch (e) {
-          console.warn(`Endpoint ${ep} gagal:`, e);
         }
-      }
 
-      if (success && replyText) {
-        appendChatBubble('assistant', replyText);
-        captionText.innerText = replyText;
-        await speakResponse(speechText || replyText);
-      } else {
-        const errMsg = 'Maaf, belum tersambung ke server GenieACS. Pastikan server aktif.';
-        appendChatBubble('assistant', errMsg);
-        captionText.innerText = errMsg;
-        await speakResponse(errMsg);
+        if (success && replyText) {
+          appendChatBubble('assistant', replyText);
+          captionText.innerText = replyText;
+          await speakResponse(speechText || replyText);
+        } else {
+          const errMsg = 'Maaf, belum tersambung ke server GenieACS. Pastikan server aktif.';
+          appendChatBubble('assistant', errMsg);
+          captionText.innerText = errMsg;
+          await speakResponse(errMsg);
+        }
+      } finally {
+        isProcessing = false;
       }
     }
 
-    // PLAY AUDIO JAWABAN AI
+    // PLAY AUDIO JAWABAN AI (SINGLE VOICE - ZERO REDUNDANCY)
     async function speakResponse(speechText) {
       if (isAudioMuted || !speechText) {
         finishSpeaking();
         return;
       }
 
+      // Pastikan audio atau browser speech sebelumnya dihentikan secara mutlak
+      stopAudioPlayback();
+
       isAiSpeaking = true;
       setOrbState('speaking');
 
+      // Jika user memilih suara Browser di dropdown
       if (selectedVoice === 'browser') {
         speakWithBrowserSpeechSynthesis(speechText);
         return;
       }
 
       // Opsi Server: Google ID atau Azure Neural
+      const prefix = workingApiPrefix !== null ? workingApiPrefix : (window.location.pathname.startsWith('/bot-proxy') ? '/bot-proxy' : '');
       const ttsEndpoints = [
-        '/api/voice-assistant/tts',
-        '/bot-proxy/api/voice-assistant/tts',
-        '/api/voice/tts',
-        '/bot-proxy/api/voice/tts'
+        `${prefix}/api/voice-assistant/tts`,
+        prefix === '' ? '/bot-proxy/api/voice-assistant/tts' : '/api/voice-assistant/tts'
       ];
 
-      let played = false;
+      let serverAudioPlayed = false;
+
       for (const ep of ttsEndpoints) {
         try {
-          const url = `${ep}?voice=${encodeURIComponent(selectedVoice)}&text=${encodeURIComponent(speechText)}`;
-          ttsAudioPlayer.src = url;
+          const fullUrl = `${ep}?voice=${encodeURIComponent(selectedVoice)}&text=${encodeURIComponent(speechText)}`;
 
-          ttsAudioPlayer.onended = () => {
-            finishSpeaking();
-          };
+          const playOk = await new Promise((resolve) => {
+            ttsAudioPlayer.onended = null;
+            ttsAudioPlayer.onerror = null;
 
-          ttsAudioPlayer.onerror = (e) => {
-            console.warn('[Audio Play Error, fallback to Browser SpeechSynthesis]:', e);
-            speakWithBrowserSpeechSynthesis(speechText);
-          };
+            ttsAudioPlayer.onended = () => {
+              finishSpeaking();
+              resolve(true);
+            };
 
-          await ttsAudioPlayer.play();
-          played = true;
-          break;
-        } catch (playErr) {
-          console.warn(`[Audio Play via ${ep} blocked/failed]:`, playErr);
+            ttsAudioPlayer.onerror = (err) => {
+              console.warn(`[Audio error on ${ep}]:`, err);
+              resolve(false);
+            };
+
+            ttsAudioPlayer.src = fullUrl;
+            ttsAudioPlayer.play().then(() => {
+              // Berhasil mulai memutar audio server
+            }).catch((playErr) => {
+              console.warn(`[Audio play blocked on ${ep}]:`, playErr);
+              resolve(false);
+            });
+          });
+
+          if (playOk) {
+            serverAudioPlayed = true;
+            workingApiPrefix = ep.startsWith('/bot-proxy') ? '/bot-proxy' : '';
+            break;
+          }
+        } catch (attemptErr) {
+          console.warn(`[TTS Attempt Failed on ${ep}]:`, attemptErr);
         }
       }
 
-      if (!played) {
+      // HANYA jika server TTS benar-benar gagal total dan audio server tidak memutar apapun
+      if (!serverAudioPlayed && isAiSpeaking) {
+        console.warn('[Fallback ke Browser SpeechSynthesis karena Server TTS tidak merespon]');
         speakWithBrowserSpeechSynthesis(speechText);
       }
     }
 
     function speakWithBrowserSpeechSynthesis(text) {
-      if (!window.speechSynthesis) {
+      if (!window.speechSynthesis || !isAiSpeaking) {
         finishSpeaking();
         return;
       }
+
+      // Matikan audio player jika ada
+      try {
+        ttsAudioPlayer.pause();
+        ttsAudioPlayer.onended = null;
+        ttsAudioPlayer.onerror = null;
+        ttsAudioPlayer.removeAttribute('src');
+      } catch (e) {}
 
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
@@ -1182,7 +1223,7 @@
         captionLabel.innerText = 'Menunggu Suara Anda...';
         captionText.innerText = 'Silakan lanjutkan berbicara...';
         setTimeout(() => {
-          if (isInCall && !isAiSpeaking) {
+          if (isInCall && !isAiSpeaking && !isProcessing) {
             startListening();
           }
         }, 500);
@@ -1191,8 +1232,11 @@
 
     function stopAudioPlayback() {
       try {
+        ttsAudioPlayer.onended = null;
+        ttsAudioPlayer.onerror = null;
         ttsAudioPlayer.pause();
         ttsAudioPlayer.currentTime = 0;
+        ttsAudioPlayer.removeAttribute('src');
       } catch (e) {}
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
