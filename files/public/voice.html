@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Asisten Suara Natural AI - ALIJAYA NET</title>
+  <title>Asisten Suara AI - ALIJAYA NET</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300f2fe'><path d='M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z'/><path d='M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z'/></svg>">
   <style>
     :root {
       --bg: #090d16;
-      --card-bg: rgba(18, 26, 43, 0.82);
-      --border: rgba(0, 242, 254, 0.2);
+      --card-bg: rgba(18, 26, 43, 0.85);
+      --border: rgba(0, 242, 254, 0.22);
       --primary: #00f2fe;
       --secondary: #4facfe;
       --accent: #8a2be2;
       --text: #e2e8f0;
       --text-muted: #94a3b8;
-      --ai-bubble: rgba(30, 41, 59, 0.92);
-      --user-bubble: linear-gradient(135deg, rgba(0, 114, 255, 0.9), rgba(0, 242, 254, 0.9));
+      --ai-bubble: rgba(30, 41, 59, 0.95);
+      --user-bubble: linear-gradient(135deg, #0072ff, #00f2fe);
     }
 
     * {
@@ -42,7 +42,7 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
-      background: rgba(9, 13, 22, 0.88);
+      background: rgba(9, 13, 22, 0.92);
       backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
@@ -139,7 +139,7 @@
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 22px;
-      padding: 18px 16px;
+      padding: 20px 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -150,39 +150,10 @@
       backdrop-filter: blur(16px);
     }
 
-    .mode-pills {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 4px;
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .mode-pill {
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      font-size: 0.78rem;
-      padding: 6px 14px;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-weight: 500;
-    }
-
-    .mode-pill.active {
-      background: linear-gradient(135deg, rgba(0, 198, 255, 0.3), rgba(0, 114, 255, 0.45));
-      color: #fff;
-      border: 1px solid var(--primary);
-      box-shadow: 0 0 12px rgba(0, 242, 254, 0.35);
-    }
-
     .orb-wrapper {
       position: relative;
-      width: 120px;
-      height: 120px;
+      width: 130px;
+      height: 130px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -204,13 +175,13 @@
     .orb-pulse.listening {
       animation: pulseAnim 1.5s infinite ease-in-out;
       opacity: 0.9;
-      background: radial-gradient(circle, rgba(0, 242, 254, 0.6) 0%, rgba(79, 172, 254, 0.35) 60%, transparent 100%);
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.65) 0%, rgba(79, 172, 254, 0.35) 60%, transparent 100%);
     }
 
     .orb-pulse.speaking {
       animation: speakAnim 1.1s infinite ease-in-out;
       opacity: 0.95;
-      background: radial-gradient(circle, rgba(138, 43, 226, 0.75) 0%, rgba(0, 242, 254, 0.45) 60%, transparent 100%);
+      background: radial-gradient(circle, rgba(138, 43, 226, 0.8) 0%, rgba(0, 242, 254, 0.5) 60%, transparent 100%);
     }
 
     @keyframes pulseAnim {
@@ -228,10 +199,10 @@
     }
 
     .main-mic-btn {
-      width: 80px;
-      height: 80px;
+      width: 86px;
+      height: 86px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.35);
       background: linear-gradient(135deg, #0f172a, #1e293b);
       color: #fff;
       display: flex;
@@ -253,32 +224,32 @@
     .main-mic-btn.active {
       background: linear-gradient(135deg, #00c6ff, #0072ff);
       border-color: #fff;
-      box-shadow: 0 0 28px rgba(0, 198, 255, 0.7);
+      box-shadow: 0 0 30px rgba(0, 198, 255, 0.8);
     }
 
     .main-mic-btn.speaking {
       background: linear-gradient(135deg, #7928ca, #ff0080);
       border-color: #fff;
-      box-shadow: 0 0 28px rgba(255, 0, 128, 0.7);
+      box-shadow: 0 0 30px rgba(255, 0, 128, 0.8);
     }
 
     .main-mic-btn svg {
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       fill: currentColor;
     }
 
     .status-text {
-      font-size: 0.95rem;
-      font-weight: 500;
+      font-size: 1rem;
+      font-weight: 600;
       color: var(--primary);
       text-align: center;
       margin-bottom: 4px;
-      min-height: 24px;
+      min-height: 26px;
     }
 
     .status-hint {
-      font-size: 0.76rem;
+      font-size: 0.78rem;
       color: var(--text-muted);
       text-align: center;
     }
@@ -292,7 +263,7 @@
       padding: 14px;
       display: flex;
       flex-direction: column;
-      min-height: 260px;
+      min-height: 280px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
       backdrop-filter: blur(16px);
       overflow: hidden;
@@ -344,9 +315,9 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       padding-right: 4px;
-      max-height: 360px;
+      max-height: 380px;
       scroll-behavior: smooth;
     }
 
@@ -361,7 +332,7 @@
     .msg {
       display: flex;
       flex-direction: column;
-      max-width: 86%;
+      max-width: 88%;
       animation: fadeInMsg 0.22s ease-out;
     }
 
@@ -381,18 +352,19 @@
     }
 
     .msg-bubble {
-      padding: 9px 13px;
-      border-radius: 15px;
-      font-size: 0.88rem;
-      line-height: 1.45;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      line-height: 1.48;
       word-break: break-word;
+      position: relative;
     }
 
     .msg.user .msg-bubble {
       background: var(--user-bubble);
       color: #fff;
       border-bottom-right-radius: 3px;
-      box-shadow: 0 4px 14px rgba(0, 114, 255, 0.3);
+      box-shadow: 0 4px 14px rgba(0, 114, 255, 0.35);
     }
 
     .msg.ai .msg-bubble {
@@ -403,11 +375,34 @@
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
     }
 
+    .msg-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      padding: 0 4px;
+    }
+
     .msg-time {
       font-size: 0.65rem;
       color: var(--text-muted);
-      margin-top: 3px;
-      padding: 0 4px;
+    }
+
+    .btn-replay-audio {
+      background: transparent;
+      border: none;
+      color: var(--primary);
+      font-size: 0.72rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      opacity: 0.85;
+      padding: 2px 4px;
+    }
+    .btn-replay-audio:hover {
+      opacity: 1;
+      text-decoration: underline;
     }
 
     .typing-dots span {
@@ -440,9 +435,9 @@
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.12);
       color: var(--text);
-      padding: 6px 12px;
+      padding: 7px 14px;
       border-radius: 18px;
-      font-size: 0.76rem;
+      font-size: 0.78rem;
       white-space: nowrap;
       cursor: pointer;
       transition: all 0.2s;
@@ -529,7 +524,7 @@
 <body>
 
   <!-- Audio Player Khusus Neural TTS -->
-  <audio id="ttsAudioPlayer" preload="auto" style="display: none;"></audio>
+  <audio id="ttsAudioPlayer" preload="auto" playsinline style="display: none;"></audio>
 
   <header>
     <div class="brand">
@@ -553,23 +548,14 @@
   <main>
     <!-- Visualizer & Mic Hero -->
     <div class="visualizer-card">
-      <div class="mode-pills">
-        <button id="modePttBtn" class="mode-pill active" onclick="setMode('ptt')">
-          🎙️ Tekan & Bicara (Push-to-Talk)
-        </button>
-        <button id="modeAutoBtn" class="mode-pill" onclick="setMode('auto')">
-          ⚡ Hands-free (Otomatis)
-        </button>
-      </div>
-
       <div class="orb-wrapper">
         <div id="orbPulse" class="orb-pulse"></div>
-        <button id="micBtn" class="main-mic-btn" title="Klik/Tahan untuk Bicara">
+        <button id="micBtn" class="main-mic-btn" title="Klik untuk Mulai Bicara">
           <svg id="micIcon" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
         </button>
       </div>
-      <div id="statusText" class="status-text">Tekan dan tahan tombol mic saat berbicara</div>
-      <div id="statusHint" class="status-hint">Suara 100% Neural Alami (Suara robotik dinonaktifkan permanen)</div>
+      <div id="statusText" class="status-text">Klik tombol mic untuk berbicara</div>
+      <div id="statusHint" class="status-hint">Katakan perintah Anda (misal: "Status server" atau "Cek modem cucimotor")</div>
     </div>
 
     <!-- Quick Chips -->
@@ -593,9 +579,11 @@
       <div id="messagesBox" class="messages-box">
         <div class="msg ai">
           <div class="msg-bubble">
-            👋 Halo! Saya asisten suara AI <b>ALIJAYA NET</b> dengan suara manusia natural asli. Tekan tombol mic di atas untuk berbicara.
+            👋 Halo! Saya asisten suara AI <b>ALIJAYA NET</b> dengan suara manusia natural asli. Klik tombol mic di atas untuk mulai berbicara.
           </div>
-          <div class="msg-time">Sekarang</div>
+          <div class="msg-meta">
+            <span class="msg-time">Sekarang</span>
+          </div>
         </div>
       </div>
     </div>
@@ -617,23 +605,17 @@
   <script>
     // MATIKAN TOTAL SUARA ROBOTIK BAWAAN BROWSER
     if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      // Override agar tidak pernah bisa memutar suara robotik
-      window.speechSynthesis.speak = function() {
-        console.log("Browser SpeechSynthesis blocked permanently. Using Neural Audio only.");
-      };
+      try { window.speechSynthesis.cancel(); } catch(e){}
+      window.speechSynthesis.speak = function() {};
     }
 
-    // State Variables
-    let currentMode = 'ptt'; // Default ke Push-to-Talk agar 100% bebas looping
+    // State
     let isListening = false;
     let isSpeaking = false;
-    let isMicMuted = false;
     let isProcessing = false;
     let audioOutputEnabled = true;
     let recognition = null;
-    let pttTimer = null;
-    let lastSpokenText = "";
+    let audioUnlocked = false;
 
     const micBtn = document.getElementById('micBtn');
     const orbPulse = document.getElementById('orbPulse');
@@ -644,38 +626,35 @@
     const toggleAudioBtn = document.getElementById('toggleAudioBtn');
     const voiceSelect = document.getElementById('voiceSelect');
     const ttsAudioPlayer = document.getElementById('ttsAudioPlayer');
-    const modeAutoBtn = document.getElementById('modeAutoBtn');
-    const modePttBtn = document.getElementById('modePttBtn');
 
-    function setMode(mode) {
-      currentMode = mode;
-      modeAutoBtn.classList.toggle('active', mode === 'auto');
-      modePttBtn.classList.toggle('active', mode === 'ptt');
-      stopListening();
-      stopSpeaking();
-
-      if (mode === 'ptt') {
-        statusText.innerText = "Tekan dan tahan tombol mic saat berbicara";
-        statusHint.innerText = "Mode Push-to-Talk: Lepas mic setelah selesai berbicara";
-      } else {
-        statusText.innerText = "Mode Hands-free Aktif";
-        statusHint.innerText = "Mic otomatis mati saat AI bersuara (Proteksi gema aktif)";
+    // UNLOCK AUDIO PADA GESTURE PERTAMA (Bypass browser Autoplay Restriction)
+    function unlockAudio() {
+      if (!audioUnlocked) {
+        ttsAudioPlayer.play().then(() => {
+          ttsAudioPlayer.pause();
+          ttsAudioPlayer.currentTime = 0;
+          audioUnlocked = true;
+          console.log("Audio playback successfully unlocked!");
+        }).catch(() => {
+          // Normal jika belum ada src
+          audioUnlocked = true;
+        });
       }
     }
 
-    // Web Speech Recognition
+    // Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     function initSpeechRecognition() {
       if (!SpeechRecognition) {
-        statusText.innerText = "Browser tidak mendukung Speech Recognition";
-        statusHint.innerText = "Gunakan Google Chrome di Android atau PC";
+        statusText.innerText = "Browser tidak mendukung Speech Recognition bawaan";
+        statusHint.innerText = "Gunakan Google Chrome di Android atau PC untuk berbicara";
         return null;
       }
 
       const rec = new SpeechRecognition();
       rec.lang = 'id-ID';
-      rec.continuous = (currentMode === 'auto');
+      rec.continuous = false; // Mode per-kalimat agar tidak looping dan langsung finalisasi
       rec.interimResults = true;
       rec.maxAlternatives = 1;
 
@@ -685,12 +664,6 @@
       };
 
       rec.onresult = (event) => {
-        // BLOKIR MUTLAK: Jika mic sedang dimute atau AI sedang bersuara/berpikir, BUANG SEMUA AUDIO!
-        if (isMicMuted || isSpeaking || isProcessing) {
-          console.log("Audio ignored by Anti-Looping filter");
-          return;
-        }
-
         let interimTranscript = '';
         let finalTranscript = '';
 
@@ -703,41 +676,33 @@
           }
         }
 
-        if (interimTranscript && !isMicMuted) {
+        if (interimTranscript) {
           statusText.innerText = `"${interimTranscript}..."`;
         }
 
-        if (finalTranscript.trim() && !isMicMuted && !isSpeaking) {
+        if (finalTranscript.trim()) {
           const cleanCmd = finalTranscript.trim();
-          
-          // Abaikan jika terlalu pendek atau sama persis dengan jawaban AI sebelumnya
-          if (cleanCmd.length < 3 || isNoiseWord(cleanCmd) || cleanCmd === lastSpokenText) {
-            return;
-          }
-
           statusText.innerText = `Memproses: "${cleanCmd}"`;
           handleUserCommand(cleanCmd);
         }
       };
 
       rec.onerror = (event) => {
-        if (event.error === 'no-speech') return;
         console.warn('Speech error:', event.error);
         if (event.error === 'not-allowed') {
           isListening = false;
           updateUIState('idle');
-          statusText.innerText = "Izin mikrofon belum diberikan";
-          statusHint.innerText = "Klik ikon gembok pada URL dan izinkan mikrofon";
+          statusText.innerText = "Izin mikrofon ditolak";
+          statusHint.innerText = "Klik ikon gembok pada URL dan izinkan akses mikrofon";
+        } else if (event.error === 'no-speech') {
+          isListening = false;
+          updateUIState('idle');
         }
       };
 
       rec.onend = () => {
-        if (isListening && currentMode === 'auto' && !isMicMuted && !isSpeaking && !isProcessing) {
-          setTimeout(() => {
-            try { if (isListening && !isMicMuted) rec.start(); } catch (e) {}
-          }, 300);
-        } else if (!isSpeaking) {
-          isListening = false;
+        isListening = false;
+        if (!isSpeaking && !isProcessing) {
           updateUIState('idle');
         }
       };
@@ -747,38 +712,13 @@
 
     recognition = initSpeechRecognition();
 
-    function isNoiseWord(txt) {
-      const lower = txt.toLowerCase().trim();
-      const noises = ['ee', 'aa', 'uh', 'hmm', 'ah', 'oh', 'ya', 'oke', 'tes'];
-      return noises.includes(lower);
-    }
+    // Toggle Klik Mic
+    micBtn.addEventListener('click', () => {
+      unlockAudio();
 
-    // Touch & Pointer Event (Push-to-Talk)
-    micBtn.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
+      // Jika AI sedang berbicara, klik tombol mic akan menghentikan suara AI seketika
       if (isSpeaking) {
         stopSpeaking();
-        return;
-      }
-      startListening();
-    });
-
-    window.addEventListener('pointerup', (e) => {
-      if (currentMode === 'ptt' && isListening) {
-        clearTimeout(pttTimer);
-        pttTimer = setTimeout(() => {
-          stopListening();
-        }, 400);
-      }
-    });
-
-    // Click handler untuk mode hands-free
-    micBtn.addEventListener('click', (e) => {
-      if (currentMode === 'ptt') return;
-
-      if (isSpeaking) {
-        stopSpeaking();
-        startListening();
         return;
       }
 
@@ -791,7 +731,6 @@
 
     function startListening() {
       stopSpeaking();
-      isMicMuted = false;
 
       if (!recognition) {
         recognition = initSpeechRecognition();
@@ -801,14 +740,16 @@
       try {
         isListening = true;
         recognition.start();
-      } catch (e) {}
+      } catch (e) {
+        console.log('Recog start catch:', e);
+      }
       updateUIState('listening');
     }
 
     function stopListening() {
       isListening = false;
       if (recognition) {
-        try { recognition.abort(); } catch (e) {}
+        try { recognition.stop(); } catch (e) {}
       }
       if (!isSpeaking) updateUIState('idle');
     }
@@ -821,7 +762,7 @@
         orbPulse.classList.add('listening');
         micBtn.classList.add('active');
         statusText.innerText = "Mendengarkan... Silakan bicara";
-        statusHint.innerText = (currentMode === 'ptt') ? "Lepas tombol mic untuk mengirim" : "Bicara langsung (Mic otomatis hening saat AI menjawab)";
+        statusHint.innerText = "Bicara kalimat Anda, sistem akan mendeteksi otomatis saat selesai";
       } else if (state === 'thinking') {
         orbPulse.classList.add('listening');
         micBtn.classList.add('active');
@@ -830,15 +771,15 @@
       } else if (state === 'speaking') {
         orbPulse.classList.add('speaking');
         micBtn.classList.add('speaking');
-        statusText.innerText = "🔊 AI sedang berbicara...";
-        statusHint.innerText = "Sentuh mic untuk menghentikan suara";
+        statusText.innerText = "🔊 AI sedang menjawab...";
+        statusHint.innerText = "Klik mic jika ingin mematikan suara";
       } else {
-        statusText.innerText = (currentMode === 'ptt') ? "Tekan dan tahan tombol mic saat berbicara" : "Klik tombol mic untuk mulai obrolan";
-        statusHint.innerText = "Suara 100% Neural Alami (Suara robotik dinonaktifkan permanen)";
+        statusText.innerText = "Klik tombol mic untuk berbicara";
+        statusHint.innerText = "Katakan perintah Anda (misal: 'Status server' atau 'Cek modem cucimotor')";
       }
     }
 
-    // Resolusi URL API GenieACS yang tepat
+    // Resolusi Jalur API Dinamis (STB 89 vs STB 185)
     function getApiEndpoints() {
       const is89 = window.location.hostname.endsWith('.89') || window.location.pathname.includes('/bot-proxy');
       if (is89) {
@@ -881,15 +822,12 @@
       throw lastError || new Error('Server GenieACS tidak merespon');
     }
 
-    // Eksekusi Perintah
+    // Handle Perintah Pengguna
     async function handleUserCommand(text) {
       if (!text || !text.trim()) return;
 
-      // KUNCI UTAMA ANTI-LOOPING:
-      // Matikan mikrofon seketika dan kunci status audio
-      isMicMuted = true;
-      isProcessing = true;
       stopListening();
+      isProcessing = true;
 
       appendMessage('user', text);
       updateUIState('thinking');
@@ -902,25 +840,20 @@
         removeLoadingBubble(loadingId);
         appendMessage('ai', replyText);
 
+        isProcessing = false;
         if (audioOutputEnabled) {
           playNeuralAudio(replyText);
         } else {
-          isMicMuted = false;
-          isProcessing = false;
-          if (currentMode === 'auto') startListening();
-          else updateUIState('idle');
+          updateUIState('idle');
         }
       } catch (err) {
         console.error('API Error:', err);
         removeLoadingBubble(loadingId);
-        const errMsg = 'Maaf, belum tersambung ke layanan bot GenieACS.';
+        const errMsg = 'Maaf, terjadi gangguan komunikasi ke bot GenieACS.';
         appendMessage('ai', errMsg);
+        isProcessing = false;
         if (audioOutputEnabled) playNeuralAudio(errMsg);
-        else {
-          isMicMuted = false;
-          isProcessing = false;
-          updateUIState('idle');
-        }
+        else updateUIState('idle');
       }
     }
 
@@ -932,44 +865,31 @@
       const audioUrl = getTtsUrl(rawText, selectedVoice);
 
       isSpeaking = true;
-      isMicMuted = true;
-      lastSpokenText = rawText;
       updateUIState('speaking');
 
       ttsAudioPlayer.src = audioUrl;
 
       ttsAudioPlayer.onended = () => {
         isSpeaking = false;
-        // JEDA HENING 1 DETIK SETELAH SUARA SELESAI AGAR TIDAK TERJADI GEMA / LOOPING
-        setTimeout(() => {
-          isMicMuted = false;
-          isProcessing = false;
-          if (currentMode === 'auto') {
-            startListening();
-          } else {
-            updateUIState('idle');
-          }
-        }, 1000);
+        updateUIState('idle');
       };
 
       ttsAudioPlayer.onerror = (e) => {
         console.warn('Neural Audio load error:', e);
         isSpeaking = false;
-        setTimeout(() => {
-          isMicMuted = false;
-          isProcessing = false;
-          if (currentMode === 'auto') startListening();
-          else updateUIState('idle');
-        }, 500);
+        updateUIState('idle');
       };
 
       ttsAudioPlayer.play().catch(e => {
-        console.warn('Autoplay caught:', e);
+        console.warn('Audio play caught:', e);
         isSpeaking = false;
-        isMicMuted = false;
-        isProcessing = false;
         updateUIState('idle');
       });
+    }
+
+    function replayAudio(text) {
+      unlockAudio();
+      playNeuralAudio(text);
     }
 
     function stopSpeaking() {
@@ -978,6 +898,7 @@
         ttsAudioPlayer.currentTime = 0;
       }
       isSpeaking = false;
+      updateUIState('idle');
     }
 
     function toggleAudioOutput() {
@@ -993,11 +914,13 @@
     }
 
     function sendQuickCommand(cmd) {
+      unlockAudio();
       textInput.value = '';
       handleUserCommand(cmd);
     }
 
     function sendTextFromInput() {
+      unlockAudio();
       const text = textInput.value.trim();
       if (!text) return;
       textInput.value = '';
@@ -1020,9 +943,18 @@
         .replace(/\*(.*?)\*/g, '<b>$1</b>')
         .replace(/`(.*?)`/g, '<code style="background:rgba(255,255,255,0.1);padding:2px 5px;border-radius:4px;font-size:0.85em;">$1</code>');
 
+      let replayBtnHtml = '';
+      if (sender === 'ai') {
+        const escapedText = encodeURIComponent(text);
+        replayBtnHtml = `<button class="btn-replay-audio" onclick="replayAudio(decodeURIComponent('${escapedText}'))">🔊 Putar Suara</button>`;
+      }
+
       msgDiv.innerHTML = `
         <div class="msg-bubble">${formatted}</div>
-        <div class="msg-time">${timeStr}</div>
+        <div class="msg-meta">
+          <span class="msg-time">${timeStr}</span>
+          ${replayBtnHtml}
+        </div>
       `;
       messagesBox.appendChild(msgDiv);
       messagesBox.scrollTop = messagesBox.scrollHeight;
