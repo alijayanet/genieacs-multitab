@@ -1383,12 +1383,11 @@ router.post(['/api/whatsapp/send', '/bot-proxy/api/whatsapp/send'], async ctx =>
 
 // ==================== 5. AGENT COMMAND ENGINE (WHATSAPP BOT) ====================
 
+const STOP_WORDS_REGEX = /\b(cek|cekkan|cekin|periksa|periksakan|lihat|lihatkan|intip|info|informasi|status|kondisi|modem|modemnya|onu|onunya|ont|ontnya|cpe|perangkat|device|pelanggan|user|akun|pppoe|klien|client|redaman|redamannya|sinyal|sinyalnya|rx|rxpower|optik|power|wifi|wifinya|ssid|sandi|password|ip|koneksi|tolong|bisa|coba|mohon|dong|min|ya|sih|yang|di|dari|ke|pada|untuk|nya|ini|itu|hari|kemarin|sekarang|besok|katanya|tadi|milik|punya|tempat|tempatnya|bantu|si|gak|ada|kah|lah|banget|lemot|mati|down|rusak|reboot|rebootkan|restart|restartkan|daftar|list|semua|berapa|banyak|total|jumlah|jelek|buruk|kritis|drop|los|lemah|baik|normal)\b/gi;
+
 function cleanDeviceTargetStr(q) {
   if (!q) return '';
-  return String(q)
-    .replace(/\b(cek|lihat|intip|info|informasi|status|kondisi|modem|onu|ont|cpe|perangkat|device|pelanggan|user|akun|pppoe|klien|client|redaman|sinyal|rx|rxpower|optik|power|wifi|ssid|sandi|password|ip|koneksi|tolong|coba|mohon|dong|min|ya|sih|yang|di|dari|ke|pada|untuk|nya|ini|itu|reboot|restart|daftar|list|semua)\b/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return String(q).replace(STOP_WORDS_REGEX, ' ').replace(/\s+/g, ' ').trim();
 }
 
 async function findDeviceByQuery(database, query) {
@@ -1780,6 +1779,24 @@ async function handleAgentCommand(reqBody) {
     const ontTriggers = ['ontbaru', 'newont', 'unconf', 'modem baru', 'ont baru', 'onu baru', 'cek onu baru', 'cek ont baru', 'belum setting', 'belum disetting', 'belum tersetting'];
     if (ontTriggers.some(trg => lowerTxt.includes(trg))) {
       return { reply: await formatUnconfiguredOnts(database) };
+    }
+
+    // 0. Perintah Restart / Reboot Natural
+    const restartTriggers = ['restart', 'reboot', 'restartkan', 'rebootkan', 'merestart', 'hidupkan ulang', 'muat ulang'];
+    if (restartTriggers.some(trg => lowerTxt.includes(trg))) {
+      const targetCand = cleanDeviceTargetStr(lowerTxt);
+      if (targetCand) {
+        const dev = await findDeviceByQuery(database, targetCand);
+        if (dev) {
+          const res = await sendNbiTask(dev._id, { name: 'reboot' });
+          if (res.ok) {
+            const pppoe = dev.VirtualParameters?.pppoeUsername?.value?.[0] || dev._id;
+            return {
+              reply: `✅ *Perintah Restart Terkirim!*\nModem (*${pppoe}*) sedang memulai ulang (reboot).\nMohon tunggu sekitar 1-2 menit hingga lampu PON/Internet menyala stabil kembali.`
+            };
+          }
+        }
+      }
     }
 
     // 3. Rekap Jumlah Total / Online / Offline Modem

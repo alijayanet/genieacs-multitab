@@ -846,8 +846,11 @@
 
     selectVoice.value = selectedVoice;
 
-    // INISIALISASI SPEECH RECOGNITION (WEB SPEECH API)
+    // INISIALISASI SPEECH RECOGNITION (WEB SPEECH API DENGAN VAD NATURAL DEBOUNCE)
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let accumulatedSpeech = '';
+    let speechSilenceTimer = null;
+    const SILENCE_DELAY_MS = 1600; // 1.6 detik jeda hening alami sebelum kalimat diproses
 
     function initSpeechRecognition() {
       if (!SpeechRecognition) {
@@ -860,52 +863,60 @@
       recognition.lang = 'id-ID';
       recognition.interimResults = true;
       recognition.maxAlternatives = 1;
-      // KUNCI UTAMA BEBAS LOOPING: continuous = false (hanya dengarkan 1 kalimat per giliran)
-      recognition.continuous = false;
+      // Aktifkan continuous agar browser tidak memotong kalimat di tengah saat ada jeda napas/koma
+      recognition.continuous = true;
 
       recognition.onstart = () => {
         isRecognizing = true;
-        if (!isAiSpeaking) {
+        if (!isAiSpeaking && !isProcessing) {
           setOrbState('listening');
-          captionLabel.innerText = 'Mendengarkan Anda...';
+          captionLabel.innerText = 'Mendengarkan (Bicara santai & bebas)...';
           captionText.classList.add('interim');
-          captionText.innerText = 'Silakan berbicara sekarang...';
+          if (!accumulatedSpeech) {
+            captionText.innerText = 'Silakan berbicara, sampaikan pertanyaan atau perintah...';
+          }
         }
       };
 
       recognition.onresult = (event) => {
-        // Cegah echo looping jika AI sedang berbicara
-        if (isAiSpeaking) return;
+        // Cegah input jika AI sedang berbicara atau sedang memproses
+        if (isAiSpeaking || isProcessing) return;
 
         let interim = '';
-        let final = '';
+        let finalChunk = '';
 
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
-            final += event.results[i][0].transcript;
+            finalChunk += event.results[i][0].transcript;
           } else {
             interim += event.results[i][0].transcript;
           }
         }
 
-        if (interim) {
-          captionLabel.innerText = 'Anda sedang berbicara...';
-          captionText.classList.add('interim');
-          captionText.innerText = `"${interim}"`;
+        if (finalChunk) {
+          accumulatedSpeech = (accumulatedSpeech ? accumulatedSpeech + ' ' : '') + finalChunk.trim();
         }
 
-        if (final) {
-          captionText.classList.remove('interim');
-          captionText.innerText = `"${final}"`;
-          handleUserSpoken(final.trim());
+        const displayCandidate = (accumulatedSpeech + (interim ? ' ' + interim : '')).trim();
+
+        if (displayCandidate) {
+          captionLabel.innerText = 'Mendengarkan (Bicara natural)...';
+          captionText.classList.add('interim');
+          captionText.innerText = `"${displayCandidate}"`;
+
+          // Reset timer jeda diam setiap kali ada kata atau suara baru terdeteksi
+          if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
+          speechSilenceTimer = setTimeout(() => {
+            finalizeAndSendSpeech();
+          }, SILENCE_DELAY_MS);
         }
       };
 
       recognition.onerror = (event) => {
         console.warn('[VoiceRec Error]:', event.error);
         if (event.error === 'no-speech') {
-          if (isInCall && isHandsfree && !isAiSpeaking) {
-            setTimeout(() => startListening(), 600);
+          if (isInCall && isHandsfree && !isAiSpeaking && !isProcessing) {
+            setTimeout(() => startListening(), 500);
           }
         } else if (event.error === 'not-allowed') {
           alert('Izin mikrofon ditolak. Harap izinkan akses mikrofon di browser Anda untuk menggunakan panggilan suara.');
@@ -915,10 +926,38 @@
 
       recognition.onend = () => {
         isRecognizing = false;
-        if (isInCall && !isAiSpeaking && voiceOrb.classList.contains('listening')) {
+        // Jika browser berhenti sendiri padahal timer jeda diam masih aktif (user baru jeda bicara):
+        if (speechSilenceTimer && accumulatedSpeech && isInCall && !isAiSpeaking && !isProcessing) {
+          try {
+            recognition.start();
+            isRecognizing = true;
+          } catch (e) {}
+          return;
+        }
+
+        if (isInCall && !isAiSpeaking && !isProcessing && voiceOrb.classList.contains('listening')) {
           setOrbState('idle');
         }
       };
+    }
+
+    function finalizeAndSendSpeech() {
+      if (speechSilenceTimer) {
+        clearTimeout(speechSilenceTimer);
+        speechSilenceTimer = null;
+      }
+
+      const textToSend = accumulatedSpeech.trim();
+      accumulatedSpeech = '';
+
+      if (!textToSend || isAiSpeaking || isProcessing) return;
+
+      captionLabel.innerText = 'Menganalisis kalimat Anda...';
+      captionText.classList.remove('interim');
+      captionText.innerText = `"${textToSend}"`;
+
+      stopListening();
+      handleUserSpoken(textToSend);
     }
 
     // AUDIO CONTEXT & VISUALIZER (ORB DANCE)
@@ -1037,7 +1076,12 @@
     }
 
     function startListening() {
-      if (!recognition || !isInCall || isAiSpeaking) return;
+      if (!recognition || !isInCall || isAiSpeaking || isProcessing) return;
+      if (speechSilenceTimer) {
+        clearTimeout(speechSilenceTimer);
+        speechSilenceTimer = null;
+      }
+      accumulatedSpeech = '';
       try {
         if (!isRecognizing) {
           recognition.start();
@@ -1048,6 +1092,10 @@
     }
 
     function stopListening() {
+      if (speechSilenceTimer) {
+        clearTimeout(speechSilenceTimer);
+        speechSilenceTimer = null;
+      }
       if (recognition && isRecognizing) {
         try {
           recognition.stop();
@@ -1386,6 +1434,19 @@
     // INIT SAAT READY
     document.addEventListener('DOMContentLoaded', () => {
       initSpeechRecognition();
+        voiceOrb.addEventListener('click', () => {
+      if (!isInCall) {
+        startCall();
+        return;
+      }
+      if (accumulatedSpeech) {
+        finalizeAndSendSpeech();
+        return;
+      }
+      if (!isRecognizing && !isAiSpeaking && !isProcessing) {
+        startListening();
+      }
+    });
       if (window.speechSynthesis) {
         window.speechSynthesis.onvoiceschanged = () => {
           window.speechSynthesis.getVoices();
