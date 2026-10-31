@@ -1538,28 +1538,37 @@ async function formatBadRxSummary(database) {
   const devs = await database.collection('devices').find().toArray();
   const bad = [];
   for (const d of devs) {
-    const rx = d.VirtualParameters?.RXPower?.value?.[0];
+    const vp = d.VirtualParameters || {};
+    const rx = vp.RXPower?._value ?? vp.RXPower?.value?.[0] ?? vp.rxPower?._value ?? vp.rxPower?.value?.[0] ?? vp.redaman?._value ?? vp.redaman?.value?.[0];
     if (!rx || rx === '-') continue;
     const num = parseFloat(String(rx).replace('dBm', '').trim());
-    if (!isNaN(num) && num < -26.0) {
-      const pppoe = d.VirtualParameters?.pppoeUsername?.value?.[0] || d._id;
-      bad.push({ pppoe, rx: num });
+    if (!isNaN(num) && (num < -26.0 || num > -5.0)) {
+      const pppoe = vp.pppoeUsername?._value ?? vp.pppoeUsername?.value?.[0] ?? d._deviceId?._SerialNumber ?? d._id;
+      const mfr = d._deviceId?._Manufacturer || '';
+      const model = d._deviceId?._ProductClass || '';
+      bad.push({ pppoe, rx: num, model: `${mfr} ${model}`.trim() });
     }
   }
 
   if (bad.length === 0) {
-    return `✅ *Audit Redaman Optik (RX)*\n━━━━━━━━━━━━━━━━━━━━\nSemua modem ONT dalam kondisi redaman normal (≥ -26 dBm)!`;
+    return `🎉 *SEMUA REDAMAN NORMAL!*\n━━━━━━━━━━━━━━━━━━━━\nTidak ditemukan modem dengan redaman kritis (seluruhnya di atas -26 dBm).`;
   }
 
   bad.sort((a, b) => a.rx - b.rx);
-  const list = bad.map(b => `🔴 *${b.pppoe}*: \`${b.rx} dBm\``);
-  return [
-    `⚠️ *AUDIT REDAMAN KRITIS (< -26 dBm)*`,
-    `━━━━━━━━━━━━━━━━━━━━`,
-    ...list,
-    `━━━━━━━━━━━━━━━━━━━━`,
-    `Total: ${bad.length} modem memerlukan perbaikan kabel/konektor fiber.`
-  ].join('\n');
+  const lines = [
+    `⚠️ *DAFTAR MODEM REDAMAN KRITIS / DROP (< -26 dBm)*`,
+    `━━━━━━━━━━━━━━━━━━━━`
+  ];
+  for (let idx = 0; idx < Math.min(bad.length, 20); idx++) {
+    const b = bad[idx];
+    const tag = b.rx < -28.0 ? '🔴 Kritis' : '🟡 Waspada';
+    lines.push(`${idx + 1}. 👤 *${b.pppoe}* : \`${b.rx} dBm\` (${tag})`);
+    if (b.model) lines.push(`   • Perangkat: ${b.model}`);
+  }
+  lines.push(`━━━━━━━━━━━━━━━━━━━━`);
+  lines.push(`Total bermasalah: *${bad.length} pelanggan*.`);
+  lines.push(`👉 _Ketik \`cek <username>\` untuk melihat rincian pelanggan._`);
+  return lines.join('\n');
 }
 
 async function formatUnconfiguredOnts(database) {
@@ -1716,6 +1725,61 @@ async function handleAgentCommand(reqBody) {
   const parts = clean.split(/\s+/);
   const cmd = parts[0].toLowerCase();
   const rest = parts.slice(1).join(' ').trim();
+
+  // === DETEKSI INTENT NATURAL LANGUAGE PERTANYAAN ADMIN (GenieACS TR-069 & Server Realtime) ===
+  if (isAdmin) {
+    const lowerTxt = clean.toLowerCase();
+    const wordsTxt = lowerTxt.split(/\s+/);
+
+    // 1. Audit / Cek Redaman Kritis Massal
+    const rxTriggers = ['redaman', 'kritis', 'los', 'jelek', 'drop', 'rx power', 'sinyal lemah', 'optik'];
+    if (rxTriggers.some(trg => lowerTxt.includes(trg))) {
+      const genericMarkers = ['yang', 'semua', 'daftar', 'list', 'ada', 'kritis', 'drop', 'berapa', 'kolektif', 'massal', 'mana saja', 'jelek', 'buruk', 'lemah', 'kritisnya', 'redamannya'];
+      const tokens = wordsTxt.filter(w => !['cek', 'lihat', 'status', 'info', 'kondisi', 'modem', 'ont', 'sinyal', 'koneksi', 'pelanggan', 'di'].includes(w));
+      const targetCand = tokens.filter(t => !rxTriggers.includes(t) && !genericMarkers.includes(t)).join(' ').trim();
+      if (targetCand) {
+        const dev = await findDeviceByQuery(database, targetCand);
+        if (dev) {
+          const loc = await database.collection('device_locations').findOne({ _id: dev._id });
+          return { reply: formatDeviceSummary(dev, loc) };
+        }
+      }
+      return { reply: await formatBadRxSummary(database) };
+    }
+
+    // 2. Cek Modem Baru / ONT Belum Setting
+    const ontTriggers = ['ontbaru', 'newont', 'unconf', 'modem baru', 'ont baru', 'belum setting', 'belum disetting', 'belum tersetting'];
+    if (ontTriggers.some(trg => lowerTxt.includes(trg))) {
+      return { reply: await formatUnconfiguredOnts(database) };
+    }
+
+    // 3. Rekap Jumlah Total / Online / Offline Modem
+    const statsTriggers = ['berapa modem', 'total modem', 'modem online', 'modem offline', 'jumlah modem', 'total pelanggan', 'berapa ont', 'status modem'];
+    if (statsTriggers.some(trg => lowerTxt.includes(trg))) {
+      const totalDevs = await database.collection('devices').countDocuments({});
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+      const onlineDevs = await database.collection('devices').countDocuments({ _lastInform: { $gte: fiveMinAgo } });
+      const offlineDevs = Math.max(0, totalDevs - onlineDevs);
+      const pctOnline = totalDevs > 0 ? ((onlineDevs / totalDevs) * 100).toFixed(1) : 0;
+      return {
+        reply: [
+          `📊 *REKAP KONEKSI MODEM PELANGGAN*`,
+          `━━━━━━━━━━━━━━━━━━━━`,
+          `• *Total Modem Terdaftar:* \`${totalDevs} unit\``,
+          `• *Modem Online Aktif:* \`${onlineDevs} unit\` (${pctOnline}%)`,
+          `• *Modem Offline / Mati:* \`${offlineDevs} unit\``,
+          `━━━━━━━━━━━━━━━━━━━━`,
+          `👉 _Ketik \`redaman\` untuk melihat modem yang redamannya kritis._`
+        ].join('\n')
+      };
+    }
+
+    // 4. Status Server STB Armbian (CPU, RAM, Suhu)
+    const serverTriggers = ['status server', 'cek server', 'kondisi server', 'suhu stb', 'suhu cpu', 'cek ram', 'cek disk', 'uptime server', 'kondisi stb'];
+    if (serverTriggers.some(trg => lowerTxt.includes(trg))) {
+      return { reply: formatServerStats() };
+    }
+  }
 
   // 1. Menu
   if (['menu', 'help', 'bantuan', 'start'].includes(cmd)) {
