@@ -314,6 +314,11 @@ router.post(['/api/voice-assistant/ask', '/bot-proxy/api/voice-assistant/ask'], 
 });
 
 router.get(['/voice', '/voice.html', '/bot-proxy/voice', '/bot-proxy/voice.html', '/asisten', '/suara'], async ctx => {
+  const jwt = ctx.cookies.get('genieacs-ui-jwt');
+  const isAuth = jwt || (ctx.state && ctx.state.user && ctx.state.user.username);
+  if (!isAuth) {
+    return ctx.redirect('/login');
+  }
   const file = path.join(PUBLIC_DIR, 'voice.html');
   if (fs.existsSync(file)) {
     ctx.type = 'text/html; charset=utf-8';

@@ -38,6 +38,17 @@
       overflow-x: hidden;
     }
 
+    /* EMBEDDED MODE DALAM SIDEBAR IFRAME GENIEACS */
+    body.embedded {
+      background: var(--bg);
+    }
+    body.embedded .topbar {
+      display: none;
+    }
+    body.embedded .page-content {
+      padding: 12px 18px 24px 18px;
+    }
+
     /* TOPBAR */
     .topbar {
       padding: 12px 24px;
@@ -787,6 +798,20 @@
   <audio id="ttsAudioPlayer" style="display:none;"></audio>
 
   <script>
+    // CEK AUTENTIKASI: Cegah akses langsung tanpa login GenieACS Admin
+    (function checkAuth() {
+      const isEmbedded = (window.self !== window.top);
+      if (isEmbedded) {
+        document.body.classList.add('embedded');
+        return;
+      }
+      // Jika diakses langsung via browser tanpa iframe, wajib sudah login (cookie genieacs-ui-jwt)
+      const hasJwt = document.cookie.split(';').some(c => c.trim().startsWith('genieacs-ui-jwt='));
+      if (!hasJwt) {
+        window.location.replace('/login');
+      }
+    })();
+
     // STATE MANAGEMENT (METODE BILLING-RTRW - ZERO LOOPING & ZERO REDUNDANCY)
     let isInCall = false;
     let isHandsfree = true; // Mode telepon otomatis
