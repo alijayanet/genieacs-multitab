@@ -407,7 +407,7 @@ upgrade_existing_server() {
     chmod 644 "${g_dir}/integrated-api.js"
 
     # 3. Salin file frontend lengkap
-    log_info "Menyalin file antarmuka (app.js, app.css, bot.html, peta.html, mywifi.html, donasi.html)..."
+    log_info "Menyalin file antarmuka (app.js, app.css, bot.html, peta.html, mywifi.html, donasi.html, voice.html)..."
     mkdir -p "${g_dir}/public"
     cp -f "${FILES_DIR}/public/app.js" "${g_dir}/public/app.js"
     cp -f "${FILES_DIR}/public/app.css" "${g_dir}/public/app.css"
@@ -415,6 +415,7 @@ upgrade_existing_server() {
     cp -f "${FILES_DIR}/public/peta.html" "${g_dir}/public/peta.html"
     cp -f "${FILES_DIR}/public/mywifi.html" "${g_dir}/public/mywifi.html"
     cp -f "${FILES_DIR}/public/donasi.html" "${g_dir}/public/donasi.html"
+    cp -f "${FILES_DIR}/public/voice.html" "${g_dir}/public/voice.html"
     chmod 644 "${g_dir}/public/"*
 
     # 4. Patch bin/genieacs-ui

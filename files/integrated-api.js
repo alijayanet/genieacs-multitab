@@ -1302,6 +1302,19 @@ router.post(['/api/system/update_apply', '/bot-proxy/api/system/update_apply'], 
       log('✅ All-in-One modul berhasil diperbarui.');
     }
 
+    // Pastikan voice.html selalu terpasang di folder public
+    const voiceSrc = path.join(repoDir, 'files', 'public', 'voice.html');
+    if (fs.existsSync(voiceSrc)) {
+      for (const nodeDir of ['/usr/lib/node_modules/genieacs', '/usr/local/lib/node_modules/genieacs']) {
+        const targetPub = path.join(nodeDir, 'public');
+        if (fs.existsSync(targetPub)) {
+          fs.copyFileSync(voiceSrc, path.join(targetPub, 'voice.html'));
+          fs.chmodSync(path.join(targetPub, 'voice.html'), 0o644);
+          log('  ✓ voice.html (Voice AI Assistant) berhasil dipasang.');
+        }
+      }
+    }
+
     log('🚀 [3/4] Merestart layanan GenieACS UI...');
     setTimeout(() => {
       try { execSync('systemctl restart genieacs-ui'); } catch (e) {}
