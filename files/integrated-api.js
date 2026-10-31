@@ -1383,6 +1383,14 @@ router.post(['/api/whatsapp/send', '/bot-proxy/api/whatsapp/send'], async ctx =>
 
 // ==================== 5. AGENT COMMAND ENGINE (WHATSAPP BOT) ====================
 
+function cleanDeviceTargetStr(q) {
+  if (!q) return '';
+  return String(q)
+    .replace(/\b(cek|lihat|intip|info|informasi|status|kondisi|modem|onu|ont|cpe|perangkat|device|pelanggan|user|akun|pppoe|klien|client|redaman|sinyal|rx|rxpower|optik|power|wifi|ssid|sandi|password|ip|koneksi|tolong|coba|mohon|dong|min|ya|sih|yang|di|dari|ke|pada|untuk|nya|ini|itu|reboot|restart|daftar|list|semua)\b/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 async function findDeviceByQuery(database, query) {
   if (!query) return null;
   const q = String(query).trim();
@@ -1419,6 +1427,27 @@ async function findDeviceByQuery(database, query) {
       .replace(/(?: |%20)/gi, '(?: |%20)');
     dev = await database.collection('devices').findOne({
       $or: [{ _id: loc._id }, { _id: new RegExp('^' + locPattern + '$', 'i') }]
+    });
+  }
+
+  if (dev) return dev;
+
+  // Coba cari dengan target yang sudah dibersihkan kata deskriptor (onu, ont, modem, dll)
+  const cleaned = cleanDeviceTargetStr(q);
+  if (cleaned && cleaned.toLowerCase() !== q.toLowerCase()) {
+    const cleanPattern = cleaned
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/(?:-|%2D)/gi, '(?:-|%2D)')
+      .replace(/(?: |%20)/gi, '(?: |%20)');
+    const cleanRegex = new RegExp(cleanPattern, 'i');
+    dev = await database.collection('devices').findOne({
+      $or: [
+        { _id: cleanRegex },
+        { 'VirtualParameters.pppoeUsername.value.0': { $regex: cleanRegex } },
+        { 'VirtualParameters.pppoeUsername._value': cleanRegex },
+        { _tags: cleanRegex },
+        { '_deviceId._SerialNumber': cleanRegex }
+      ]
     });
   }
 
@@ -1748,14 +1777,22 @@ async function handleAgentCommand(reqBody) {
     }
 
     // 2. Cek Modem Baru / ONT Belum Setting
-    const ontTriggers = ['ontbaru', 'newont', 'unconf', 'modem baru', 'ont baru', 'belum setting', 'belum disetting', 'belum tersetting'];
+    const ontTriggers = ['ontbaru', 'newont', 'unconf', 'modem baru', 'ont baru', 'onu baru', 'cek onu baru', 'cek ont baru', 'belum setting', 'belum disetting', 'belum tersetting'];
     if (ontTriggers.some(trg => lowerTxt.includes(trg))) {
       return { reply: await formatUnconfiguredOnts(database) };
     }
 
     // 3. Rekap Jumlah Total / Online / Offline Modem
-    const statsTriggers = ['berapa modem', 'total modem', 'modem online', 'modem offline', 'jumlah modem', 'total pelanggan', 'berapa ont', 'status modem'];
+    const statsTriggers = ['berapa modem', 'total modem', 'modem online', 'modem offline', 'jumlah modem', 'total pelanggan', 'berapa ont', 'berapa onu', 'total onu', 'jumlah onu', 'total ont', 'jumlah ont', 'status modem', 'status onu', 'status ont', 'cek onu', 'cek ont', 'daftar modem', 'daftar onu', 'daftar ont', 'list onu', 'list ont', 'list modem'];
     if (statsTriggers.some(trg => lowerTxt.includes(trg))) {
+      const targetCand = cleanDeviceTargetStr(lowerTxt);
+      if (targetCand) {
+        const dev = await findDeviceByQuery(database, targetCand);
+        if (dev) {
+          const loc = await database.collection('device_locations').findOne({ _id: dev._id });
+          return { reply: formatDeviceSummary(dev, loc) };
+        }
+      }
       const totalDevs = await database.collection('devices').countDocuments({});
       const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
       const onlineDevs = await database.collection('devices').countDocuments({ _lastInform: { $gte: fiveMinAgo } });
@@ -1865,9 +1902,31 @@ async function handleAgentCommand(reqBody) {
   // 5. Cek
   if (['cek', 'info'].includes(cmd)) {
     const targetQuery = rest || (customerDev ? customerDev._id : '');
-    if (!targetQuery) return { reply: '⚠️ Silakan sertakan Username PPPoE atau Serial Number.\n_Contoh:_ `cek cucimotor`' };
-    const dev = await findDeviceByQuery(database, targetQuery);
-    if (!dev) return { reply: `❌ Modem \`${targetQuery}\` tidak ditemukan di database GenieACS.` };
+    const cleanTarget = cleanDeviceTargetStr(targetQuery);
+    if (!cleanTarget) {
+      if (isAdmin) {
+        const totalDevs = await database.collection('devices').countDocuments({});
+        const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const onlineDevs = await database.collection('devices').countDocuments({ _lastInform: { $gte: fiveMinAgo } });
+        const offlineDevs = Math.max(0, totalDevs - onlineDevs);
+        const pctOnline = totalDevs > 0 ? ((onlineDevs / totalDevs) * 100).toFixed(1) : 0;
+        return {
+          reply: [
+            `📊 *REKAP KONEKSI MODEM / ONU PELANGGAN*`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `• *Total Modem Terdaftar:* \`${totalDevs} unit\``,
+            `• *Modem Online Aktif:* \`${onlineDevs} unit\` (${pctOnline}%)`,
+            `• *Modem Offline / Mati:* \`${offlineDevs} unit\``,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `👉 _Ketik \`cek <username>\` (contoh: \`cek ajri\`) untuk rincian ONT pelanggan._`,
+            `👉 _Ketik \`redaman\` untuk melihat seluruh modem yang redamannya kritis._`
+          ].join('\n')
+        };
+      }
+      return { reply: '📌 Silakan sertakan Username PPPoE atau Serial Number.\n_Contoh:_ `cek cucimotor`' };
+    }
+    const dev = (await findDeviceByQuery(database, cleanTarget)) || (await findDeviceByQuery(database, targetQuery));
+    if (!dev) return { reply: `❌ Modem / ONT \`${cleanTarget || targetQuery}\` tidak ditemukan di database GenieACS.` };
     const loc = await database.collection('device_locations').findOne({ _id: dev._id });
     return { reply: formatDeviceSummary(dev, loc) };
   }
