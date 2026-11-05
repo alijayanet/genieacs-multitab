@@ -137,6 +137,16 @@ sudo ./install.sh --upgrade
 
 ---
 
+#### C. Hanya Restore / Update Parameter Saja (Tanpa Reinstall)
+Gunakan perintah ini jika Anda hanya ingin memperbarui dan menimpa parameter VirtualParameters, Presets, Provisions, dan Tampilan Overview terbaru tanpa mengubah instalasi GenieACS:
+`ash
+chmod +x apply-template.sh
+sudo ./apply-template.sh
+`
+*Catatan: 100% AMAN. Data perangkat pelanggan (devices), akun user login (users), dan perizinan server Anda tidak akan terhapus.*
+
+---
+
 ## 🌐 Daftar URL Akses Layanan
 
 Setelah instalasi selesai, seluruh layanan langsung dapat diakses melalui browser pada **Port 3000**:
